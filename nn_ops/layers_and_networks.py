@@ -8,13 +8,13 @@ class Layer:
         """
         # Initialize weights based on chosen method
         if init_method == 'he':
-            self.weights = Tensor(self.he_initialization((nin, nout)), requires_grad=True)
+            self.W = Tensor(self.he_initialization((nin, nout)), requires_grad=True)
         elif init_method == 'xavier':
-            self.weights = Tensor(self.xavier_initialization((nin, nout)), requires_grad=True)
+            self.W = Tensor(self.xavier_initialization((nin, nout)), requires_grad=True)
         else:  # Default uniform initialization
-            self.weights = Tensor(np.random.uniform(-1, 1, (nin, nout)), requires_grad=True)
+            self.W = Tensor(np.random.uniform(-1, 1, (nin, nout)), requires_grad=True)
             
-        self.bias = Tensor(np.zeros((1, nout)), requires_grad=True)  # Initialize bias to zeros
+        self.b = Tensor(np.zeros((1, nout)), requires_grad=True)  # Initialize bias to zeros
         self.activation = activation
         self.dropout = Dropout(dropout_rate) if dropout_rate > 0 else None
         self.training = True
@@ -39,7 +39,7 @@ class Layer:
         """
         Forward pass with dropout
         """
-        z = x.matmul(self.weights) + self.bias
+        z = x.matmul(self.W) + self.b
 
         # Apply activation
         if self.activation == "relu":
@@ -67,7 +67,7 @@ class Layer:
         """
         Collect parameters (weights and biases) of the layer.
         """
-        return [self.weights, self.bias]
+        return [self.W, self.b]
     
 class Dropout(Layer):
     def __init__(self, p=0.5):
@@ -161,13 +161,6 @@ class Encoder:
         logvar = self.fc_logvar(h)
         return mu, logvar
     
-    def parameters(self): # Renamed from collect_parameters and corrected
-        params = []
-        params.extend(self.fc1.parameters())
-        params.extend(self.fc_mu.parameters())
-        params.extend(self.fc_logvar.parameters())
-        return params
-    
     def train(self): # Added
         self.fc1.train()
         self.fc_mu.train()
@@ -187,13 +180,7 @@ class Decoder:
     def __call__(self, z):
         h = self.fc1(z)
         return self.fc2(h)
-    
-    def parameters(self): # Renamed from collect_parameters and corrected
-        params = []
-        params.extend(self.fc1.parameters())
-        params.extend(self.fc2.parameters())
-        return params
-    
+
     def train(self): # Added
         self.fc1.train()
         self.fc2.train()
@@ -218,8 +205,11 @@ class VAE:
         return self.forward(x)
 
     def parameters(self): # Corrected to call Encoder/Decoder parameters methods
-        return self.encoder.parameters() + self.decoder.parameters()
-    
+        ps = [] 
+        for m in [self.encoder.fc1, self.encoder.fc_mu, self.encoder.fc_logvar, self.decoder.fc1, self.decoder.fc2]:
+            ps.extend(m.parameters())
+        return ps 
+
     def train(self): # Corrected
         self.encoder.train()
         self.decoder.train()

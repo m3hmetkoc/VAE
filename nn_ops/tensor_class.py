@@ -164,7 +164,7 @@ def reparameterize(mu: Tensor, logvar: Tensor) -> Tensor:
       z = mu + std * eps,  eps ~ N(0,1)
     Keep this in your model’s forward pass (not inside Tensor class).
     """
-    std = (0.5 * logvar).exp()
+    std = (logvar * 0.5).exp()
     eps = Tensor(np.random.randn(*mu.data.shape), requires_grad=False)
     return mu + std * eps
 
@@ -175,8 +175,8 @@ def binary_cross_entropy(recon_x: Tensor, x: Tensor, eps=1e-8) -> Tensor:
     """
     recon_x_clamped = Tensor(np.clip(recon_x.data, eps, 1 - eps), requires_grad=False)
     term1 = x * recon_x_clamped.log()
-    term2 = (1 - x) * (1 - recon_x_clamped).log()
-    return -(term1 + term2).sum() / recon_x.data.shape[0]
+    term2 = ((x * -1) + 1) * ((recon_x_clamped * -1) + 1).log()
+    return ((term1 + term2) * (-1)).sum() / recon_x.data.shape[0]
 
 
 def kl_divergence(mu: Tensor, logvar: Tensor) -> Tensor:
@@ -184,5 +184,5 @@ def kl_divergence(mu: Tensor, logvar: Tensor) -> Tensor:
     KL divergence between N(mu, var) and N(0,1):
       -0.5 * sum(1 + logvar - mu^2 - exp(logvar)) / batch_size
     """
-    kld = -0.5 * (1 + logvar - mu**2 - logvar.exp()).sum()
+    kld = (((logvar + 1) - (mu**2 + logvar.exp()))* (-0.5)).sum()
     return kld / mu.data.shape[0]

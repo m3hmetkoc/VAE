@@ -12,6 +12,7 @@ class Train:
         self.test_generator = test_generator
         self.num_epochs = num_epochs
         self.learning_rate = learning_rate
+        self.batch_size = batch_size
         self.early_stopping_patience = early_stopping_patience
     
         self.num_train_batches = len(train_generator.data_loader) # Or however you get num batches
@@ -36,7 +37,7 @@ class Train:
     def train_one_epoch(self, epoch, optimizer_name="sgd"):
         self.model.train()  # Set VAE to training mode
         model_params = self.model.parameters()
-        print(len(model_params))
+
         total_epoch_loss = 0
         total_epoch_recon_loss = 0
         total_epoch_kld_loss = 0
@@ -47,11 +48,11 @@ class Train:
         
         # Forward pass through VAE
         reconstructed_x, mu, logvar = self.model(X_batch)
-        
+
         # Calculate loss components
         recon_loss = binary_cross_entropy(recon_x = reconstructed_x, x = X_batch)
         kld_loss = kl_divergence(mu, logvar)
-        
+
         # Calculate total loss with beta weighting
         beta = 1.0
         # This is where the error was happening - need to ensure consistent scalar handling
@@ -59,13 +60,15 @@ class Train:
         weighted_kld = kld_loss * beta
         total_loss = recon_loss + weighted_kld
         
+        print(total_loss)
+
         # Zero gradients
         for p in model_params:
             if p.grad is not None:
                 p.grad = np.zeros_like(p.data)
         
         # Backward pass---------------
-        total_loss.backwards()
+        total_loss.backward()
         #---------------------
         print([p.grad.mean() for p in model_params])
 
