@@ -58,8 +58,8 @@ if __name__ == "__main__":
     start = time.time() 
     # Training loop
     num_epochs = 50
-    learning_rate = 0.001
-    batch_size = 64
+    learning_rate = 0.0001
+    batch_size = 128
     
     # Load data
     train_loader, test_loader = load_mnist_data(batch_size)
@@ -81,15 +81,16 @@ if __name__ == "__main__":
         test_generator=test_generator,
         num_epochs=num_epochs,
         learning_rate=learning_rate,
-        batch_size=batch_size
+        batch_size=batch_size,
+        early_stopping_patience=15
     )
 
     trainer.train()
     end = time.time() 
     
-    trainer.plot_training_history(trainer.history)
+    trainer.plot_training_history()
 
-    model_saver = ModelSaver(model=model, model_name="mnist_classifier_v1", include_history = trainer.history)
+    #model_saver = ModelSaver(model=model, model_name="mnist_classifier_v1", include_history = trainer.history)
     
     
     print(f"The training time for number of epochs: {num_epochs} and batch size: {batch_size} is: {(end-start):.2f}")
@@ -99,17 +100,12 @@ if __name__ == "__main__":
     trained_vae_model.eval()          # Set to evaluation mode
     num_digits_to_generate = 25       # How many digits to generate and plot
 
+    z = Tensor(np.random.randn(1, latent_dim), requires_grad=False)
+    out = model.decoder(z)
+    out = out.data.reshape(28,28)
+    plt.imshow(out, cmap='gray', vmin=0, vmax=1)
+    plt.show()
     # Generate new digit data
-    generated_image_data = generate_digits(
-        vae_model=trained_vae_model,
-        num_samples=num_digits_to_generate,
-        latent_dim=latent_dim
-    )
     # Plot the generated digits
     # The image_shape should match your input data, e.g., (28, 28) for flattened MNIST
-    plot_generated_digits(
-        images_data=generated_image_data,
-        num_samples=num_digits_to_generate,
-        image_shape=(int(np.sqrt(input_dim)), int(np.sqrt(input_dim))) # e.g., (28,28)
-    )
-    print(f"{num_digits_to_generate} digits generated and plotted.")
+

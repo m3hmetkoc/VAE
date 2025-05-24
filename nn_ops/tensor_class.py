@@ -86,6 +86,19 @@ class Tensor:
         out._backward = _backward
         return out
 
+    def clip(self, min_val, max_val):
+        out_data = np.clip(self.data, min_val, max_val)
+        out = Tensor(out_data, requires_grad=self.requires_grad)
+
+        if self.requires_grad:
+            def _backward():
+                grad_mask = (self.data >= min_val) & (self.data <= max_val)
+                self.grad += grad_mask * out.grad
+            out._backward = _backward
+            out._prev = {self}
+        
+        return out
+
     # --- Activations and elementwise ---
     def log(self):
         out = Tensor(np.log(self.data))
@@ -169,11 +182,11 @@ def reparameterize(mu: Tensor, logvar: Tensor) -> Tensor:
     return mu + std * eps
 
 
-def binary_cross_entropy(recon_x: Tensor, x: Tensor, eps=1e-8) -> Tensor:
+def binary_cross_entropy(recon_x: Tensor, x: Tensor, eps=1e-7) -> Tensor:
     """
     BCE per batch:  -[x*log(recon_x) + (1-x)*log(1-recon_x)].sum() / batch_size
     """
-    recon_x_clamped = Tensor(np.clip(recon_x.data, eps, 1 - eps), requires_grad=False)
+    recon_x_clamped = recon_x.clip(eps, 1 - eps)
     term1 = x * recon_x_clamped.log()
     term2 = ((x * -1) + 1) * ((recon_x_clamped * -1) + 1).log()
     return ((term1 + term2) * (-1)).sum() / recon_x.data.shape[0]

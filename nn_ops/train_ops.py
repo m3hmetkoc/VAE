@@ -2,7 +2,7 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt 
 from .data_process import EarlyStopping
-from .tensor_class import binary_cross_entropy, kl_divergence
+from .tensor_class import binary_cross_entropy, kl_divergence, Tensor
 
 class Train:
     def __init__(self, model, train_generator, test_generator, num_epochs, learning_rate, batch_size, early_stopping_patience=5):
@@ -14,7 +14,7 @@ class Train:
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.early_stopping_patience = early_stopping_patience
-    
+
         self.num_train_batches = len(train_generator.data_loader) # Or however you get num batches
         self.num_test_batches = len(test_generator.data_loader)   # Or however you get num batches
         self.early_stopping = EarlyStopping(patience=early_stopping_patience)
@@ -59,8 +59,6 @@ class Train:
         # Use scalar multiplication to apply beta
         weighted_kld = kld_loss * beta
         total_loss = recon_loss + weighted_kld
-        
-        print(total_loss)
 
         # Zero gradients
         for p in model_params:
@@ -70,8 +68,6 @@ class Train:
         # Backward pass---------------
         total_loss.backward()
         #---------------------
-        print([p.grad.mean() for p in model_params])
-
         # Update weights
         if optimizer_name == "sgd":
             self.stochastic_gradient_descent(model_params, current_lr)
@@ -126,7 +122,9 @@ class Train:
             'train_recon_loss': [], 'val_recon_loss': [],
             'train_kld_loss': [], 'val_kld_loss': []
         }
-
+        
+        #self.optimizer = Adamax()
+        
         for epoch in range(self.num_epochs):
             train_loss, train_recon, train_kld = self.train_one_epoch(epoch, optimizer_name=optimizer)
             val_loss, val_recon, val_kld = self.evaluate()
@@ -142,6 +140,12 @@ class Train:
             print(f'Train: Total Loss: {train_loss:.4f} (Recon: {train_recon:.4f}, KLD: {train_kld:.4f})')
             print(f'Val:   Total Loss: {val_loss:.4f} (Recon: {val_recon:.4f}, KLD: {val_kld:.4f})')
             print(f'Learning Rate: {self.lr_schedule(epoch):.6f}')
+            print(f"Total loss: {train_loss * self.num_train_batches}")
+            z = Tensor(np.random.randn(1, 20), requires_grad=False)
+            out = self.model.decoder(z)
+            out = out.data.reshape(28,28)
+            plt.imshow(out, cmap='gray', vmin=0, vmax=1)
+            plt.show()
 
             self.early_stopping(val_loss) # Early stopping based on total validation loss
             if self.early_stopping.should_stop:
@@ -187,3 +191,32 @@ class Train:
         
         plt.tight_layout()
         plt.show()
+
+
+import numpy as np
+
+class Adamax:
+    def __init__(self, parameters, lr=0.002, beta1=0.9, beta2=0.999, eps=1e-8):
+        self.parameters = parameters
+        self.lr = lr
+        self.beta1 = beta1
+        self.beta2 = beta2
+        self.eps = eps
+        self.t = 0
+        self.m = [np.zeros_like(p.data) for p in parameters]
+        self.u = [np.zeros_like(p.data) for p in parameters]
+
+    def step(self):
+        self.t += 1
+        for i, p in enumerate(self.parameters):
+            if p.grad is None:
+                continue
+            g = p.grad
+            self.m[i] = self.beta1 * self.m[i] + (1 - self.beta1) * g
+            self.u[i] = np.maximum(self.beta2 * self.u[i], np.abs(g))
+            m_hat = self.m[i] / (1 - self.beta1 ** self.t)
+            p.data -= self.lr * m_hat / (self.u[i] + self.eps)
+
+    def zero_grad(self):
+        for p in self.parameters:
+            p.grad = np.zeros_like(p.data)
