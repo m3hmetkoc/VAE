@@ -194,8 +194,12 @@ def binary_cross_entropy(recon_x: Tensor, x: Tensor, eps=1e-7) -> Tensor:
 
 def kl_divergence(mu: Tensor, logvar: Tensor) -> Tensor:
     """
-    KL divergence between N(mu, var) and N(0,1):
-      -0.5 * sum(1 + logvar - mu^2 - exp(logvar)) / batch_size
+    FIXED: KL divergence between N(mu, var) and N(0,1):
+    KL = 0.5 * sum(mu^2 + exp(logvar) - logvar - 1) / batch_size
+    
+    Original formula was: -0.5 * sum(1 + logvar - mu^2 - exp(logvar))
+    Which is equivalent to: 0.5 * sum(mu^2 + exp(logvar) - logvar - 1)
     """
-    kld = (((logvar + 1) - (mu**2 + logvar.exp()))* (-0.5)).sum()
+    # Correct implementation
+    kld = ((mu**2 + logvar.exp() - logvar - 1) * 0.5).sum()
     return kld / mu.data.shape[0]
