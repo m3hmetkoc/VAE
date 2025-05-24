@@ -14,6 +14,7 @@ class Train:
         self.learning_rate = learning_rate
         self.batch_size = batch_size
         self.early_stopping_patience = early_stopping_patience
+        self.model_params = self.model.parameters()
 
         self.num_train_batches = len(train_generator.data_loader) # Or however you get num batches
         self.num_test_batches = len(test_generator.data_loader)   # Or however you get num batches
@@ -35,8 +36,8 @@ class Train:
                 p.data -= lr * p.grad 
 
     def train_one_epoch(self, epoch, optimizer_name="sgd"):
+    
         self.model.train()  # Set VAE to training mode
-        model_params = self.model.parameters()
 
         total_epoch_loss = 0
         total_epoch_recon_loss = 0
@@ -61,16 +62,12 @@ class Train:
         total_loss = recon_loss + weighted_kld
 
         # Zero gradients
-        for p in model_params:
-            if p.grad is not None:
-                p.grad = np.zeros_like(p.data)
-        
+        self.optimizer.zero_grad()
         # Backward pass---------------
         total_loss.backward()
         #---------------------
         # Update weights
-        if optimizer_name == "sgd":
-            self.stochastic_gradient_descent(model_params, current_lr)
+        self.optimizer.step()
         
         # Record losses
         total_epoch_loss += total_loss.data 
@@ -123,7 +120,7 @@ class Train:
             'train_kld_loss': [], 'val_kld_loss': []
         }
         
-        #self.optimizer = Adamax()
+        self.optimizer = Adamax(self.model_params)
         
         for epoch in range(self.num_epochs):
             train_loss, train_recon, train_kld = self.train_one_epoch(epoch, optimizer_name=optimizer)
@@ -193,10 +190,8 @@ class Train:
         plt.show()
 
 
-import numpy as np
-
 class Adamax:
-    def __init__(self, parameters, lr=0.002, beta1=0.9, beta2=0.999, eps=1e-8):
+    def __init__(self, parameters, lr=0.0002, beta1=0.9, beta2=0.999, eps=1e-8):
         self.parameters = parameters
         self.lr = lr
         self.beta1 = beta1
