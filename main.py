@@ -1,7 +1,7 @@
 from nn_ops import MNISTBatchGenerator, VAE, Tensor, ModelSaver, Train, load_mnist_data
-import time 
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import time 
 
 # In main.py
 def generate_digits(vae_model, num_samples, latent_dim):
@@ -57,6 +57,7 @@ def plot_generated_digits(images_data, num_samples, image_shape=(28, 28), title=
 if __name__ == "__main__":
     start = time.time() 
     # Training loop
+
     num_epochs = 50
     learning_rate = 0.001
     batch_size = 64
@@ -65,16 +66,18 @@ if __name__ == "__main__":
     train_loader, test_loader = load_mnist_data(batch_size)
     train_generator = MNISTBatchGenerator(train_loader)
     test_generator = MNISTBatchGenerator(test_loader)
-    input_dim, hidden_dim, latent_dim = 784, 256, 20
+
+    input_dim = 784
+    latent_dim = 20 
     # Create model (assuming your MLP class is defined)
     model = VAE(
         input_dim=input_dim,  # 28x28 pixels
-        hidden_dim=hidden_dim,  # Example architecture
+        encoder_hidden_dims=[256],
+        decoder_hidden_dims=[256],  # Example architecture
         latent_dim=latent_dim
     )
 
     start = time.time() 
-    
     trainer = Train(
         model=model,
         train_generator=train_generator,
@@ -84,14 +87,11 @@ if __name__ == "__main__":
         batch_size=batch_size,
         early_stopping_patience=15
     )
-
     trainer.train()
     end = time.time() 
-    
-    trainer.plot_training_history()
 
-    #model_saver = ModelSaver(model=model, model_name="mnist_classifier_v1", include_history = trainer.history)
-    
+    saver_vae = ModelSaver(model=model, model_name="new_vae", include_history={"epoch": num_epochs})
+    saved_vae_path = saver_vae.save_model()
     
     print(f"The training time for number of epochs: {num_epochs} and batch size: {batch_size} is: {(end-start):.2f}")
     print("Generating digits from the trained VAE...")
@@ -105,6 +105,7 @@ if __name__ == "__main__":
     out = out.data.reshape(28,28)
     plt.imshow(out, cmap='gray', vmin=0, vmax=1)
     plt.show()
+
     # Generate new digit data
     # Plot the generated digits
     # The image_shape should match your input data, e.g., (28, 28) for flattened MNIST

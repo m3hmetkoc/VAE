@@ -1,7 +1,7 @@
 import numpy as np 
 import matplotlib.pyplot as plt # Keep if you adapt plotting later
-from data_process import EarlyStopping
-from tensor_class import Tensor, kl_divergence, binary_cross_entropy
+from .data_process import EarlyStopping
+from .tensor_class import Tensor, kl_divergence, binary_cross_entropy
 
 class Train:
     def __init__(self, model, train_generator, test_generator, num_epochs, learning_rate, batch_size, early_stopping_patience=5):
@@ -15,9 +15,7 @@ class Train:
         self.model_params = self.model.parameters()
 
         self.num_train_batches = len(train_generator.data_loader)
-        print(self.num_train_batches)
         self.num_test_batches = len(test_generator.data_loader)
-        print(self.num_test_batches)
         self.early_stopping = EarlyStopping(patience=early_stopping_patience)
 
         self.history = {

@@ -1,7 +1,7 @@
 import os
 import torch
 from torchvision import datasets, transforms
-from tensor_class import Tensor 
+from .tensor_class import Tensor 
 
 def load_mnist_data(batch_size=64, data_path='./data'):
     """

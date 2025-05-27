@@ -3,9 +3,9 @@ import os
 import datetime
 import json
 import pickle 
-from data_process import MNISTBatchGenerator, load_mnist_data
-from train_ops import Train
-from layers_and_networks import VAE, NN 
+from .data_process import MNISTBatchGenerator, load_mnist_data
+from .train_ops import Train
+from .layers_and_networks import VAE, NN, VAE_old 
 
 
 def convert_to_json_serializable(item):
@@ -41,43 +41,35 @@ class ModelSaver:
     def save_model(self):
         """
         Save the model, its architecture, and training history.
-        Weights are saved as a flat list of numpy arrays obtained from model.parameters().
+        Uses the model's get_config() method to save architecture information.
         """
         model_name_to_use = self.model_name
         if model_name_to_use is None:
             timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
             model_name_to_use = f'model_{timestamp}'
 
-        model_dir = os.path.join(self.base_path, model_name_to_use)
-        os.makedirs(f"{model_dir}_{datetime.datetime.now().strftime('%H:%M')}", exist_ok=True)
+        # Create unique directory with timestamp to avoid conflicts
+        timestamp_suffix = datetime.datetime.now().strftime('%H:%M:%S')
+        model_dir = os.path.join(self.base_path, f"{model_name_to_use}_{timestamp_suffix}")
+        os.makedirs(model_dir, exist_ok=True)
     
-        architecture = {}
-        if isinstance(self.model, VAE): #
-            architecture['model_type'] = 'VAE'
-            architecture['input_dim'] = self.model.encoder.fc1.W.data.shape[0] #
-            architecture['hidden_dim'] = self.model.encoder.fc1.W.data.shape[1] #
-            architecture['latent_dim'] = self.model.encoder.fc_mu.W.data.shape[1] #
-        elif isinstance(self.model, NN): #
-            architecture['model_type'] = 'NN'
-            if not self.model.layers: #
-                raise ValueError("Cannot save an NN model with no layers.")
-            architecture['nin'] = self.model.layers[0].W.data.shape[0] #
-            architecture['nouts'] = [layer.W.data.shape[1] for layer in self.model.layers] #
-            architecture['activations'] = [str(layer.activation) for layer in self.model.layers] #
-            architecture['dropout_rates'] = [layer.dropout.p if layer.dropout is not None else 0.0
-                                           for layer in self.model.layers] #
-        else:
-            raise TypeError(f"Unsupported model type for saving: {type(self.model)}")
+        # Get architecture configuration from model
+        try:
+            architecture = self.model.get_config()
+        except AttributeError:
+            raise ValueError(f"Model type {type(self.model)} does not support get_config() method")
 
+        # Save architecture
         serializable_architecture = convert_to_json_serializable(architecture)
         with open(os.path.join(model_dir, 'architecture.json'), 'w') as f:
             json.dump(serializable_architecture, f, indent=4)
 
-        weights_data_list = [param.data for param in self.model.parameters()] #
-
+        # Save weights
+        weights_data_list = [param.data for param in self.model.parameters()]
         with open(os.path.join(model_dir, 'weights.pkl'), 'wb') as f:
             pickle.dump(weights_data_list, f)
 
+        # Save training history if provided
         if self.include_history:
             serializable_history = convert_to_json_serializable(self.include_history)
             with open(os.path.join(model_dir, 'history.json'), 'w') as f:
@@ -90,51 +82,61 @@ class ModelSaver:
     def load_model(model_path):
         """
         Load a saved model.
-        Weights are loaded by iterating through model.parameters() and assigning the saved numpy arrays.
+        Uses the architecture.json to reconstruct the model with correct configuration.
         """
+        # Load architecture
         arch_path = os.path.join(model_path, 'architecture.json')
         if not os.path.exists(arch_path):
             raise FileNotFoundError(f"Architecture file not found: {arch_path}")
         with open(arch_path, 'r') as f:
             architecture = json.load(f)
 
+        # Load weights
         weights_path = os.path.join(model_path, 'weights.pkl')
         if not os.path.exists(weights_path):
             raise FileNotFoundError(f"Weights file not found: {weights_path}")
         with open(weights_path, 'rb') as f:
             loaded_weights_data_list = pickle.load(f)
 
+        # Get model type
         model_type = architecture.get('model_type')
         if not model_type:
             raise ValueError("Model type not specified in architecture.json.")
 
+        # Reconstruct model based on type
         loaded_model = None
-        if model_type == 'VAE':
-            loaded_model = VAE(
+        if model_type == 'VAE_old':
+            loaded_model = VAE_old(
                 input_dim=architecture['input_dim'],
                 hidden_dim=architecture['hidden_dim'],
-                latent_dim=architecture['latent_dim']
+                latent_dim=architecture['latent_dim'],
+                init_method=architecture.get('init_method', 'he')
+            )
+        elif model_type == 'VAE':
+            loaded_model = VAE(
+                input_dim=architecture['input_dim'],
+                latent_dim=architecture['latent_dim'],
+                encoder_hidden_dims=architecture.get('encoder_hidden_dims', [256]),
+                decoder_hidden_dims=architecture.get('decoder_hidden_dims', [256]),
+                encoder_activations=architecture.get('encoder_activations'),
+                decoder_activations=architecture.get('decoder_activations'),
+                encoder_dropout_rates=architecture.get('encoder_dropout_rates'),
+                decoder_dropout_rates=architecture.get('decoder_dropout_rates'),
+                init_method=architecture.get('init_method', 'he')
             )
         elif model_type == 'NN':
-            nin = architecture['nin'] #
-            nouts = architecture['nouts'] #
-            activations = architecture['activations'] #
-            dropout_rates = architecture.get('dropout_rates', [0.0] * len(nouts)) #
-            # init_method = architecture.get('init_method', 'he') # Default if not saved
-
             loaded_model = NN(
-                nin=nin,
-                nouts=nouts,
-                activations=activations,
-                dropout_rates=dropout_rates
-                # init_method=init_method # Pass if NN constructor uses it
-            ) #
+                nin=architecture['nin'],
+                nouts=architecture['nouts'],
+                activations=architecture['activations'],
+                dropout_rates=architecture.get('dropout_rates', [0.0] * len(architecture['nouts'])),
+                init_method=architecture.get('init_method', 'he')
+            )
         else:
             raise ValueError(f"Unknown model type in architecture.json: {model_type}")
 
-        # Load weights using model.parameters()
-        # This relies on model.parameters() returning tensors in a consistent order.
-        model_params_tensors = loaded_model.parameters() #
+        # Load weights into model parameters
+        model_params_tensors = loaded_model.parameters()
         if len(loaded_weights_data_list) != len(model_params_tensors):
             raise ValueError(
                 f"Mismatch in the number of saved weight arrays ({len(loaded_weights_data_list)}) "
@@ -142,14 +144,16 @@ class ModelSaver:
                 "The model architecture may have changed or the weights file is corrupted."
             )
 
+        # Assign loaded weights to model parameters
         for param_tensor, loaded_data in zip(model_params_tensors, loaded_weights_data_list):
             if param_tensor.data.shape != loaded_data.shape:
                 raise ValueError(
                     f"Shape mismatch for a parameter: model expects {param_tensor.data.shape}, "
                     f"saved data has {loaded_data.shape}. Model architecture may be inconsistent."
                 )
-            param_tensor.data = loaded_data
+            param_tensor.data = loaded_data.copy()  # Use copy to avoid reference issues
 
+        # Load training history if available
         history = None
         history_path = os.path.join(model_path, 'history.json')
         if os.path.exists(history_path):
@@ -177,6 +181,7 @@ class ModelSaver:
                     if os.path.exists(arch_path):
                         with open(arch_path, 'r') as f:
                             architecture_content = json.load(f)
+                        
                         models_info.append({
                             'name': model_name,
                             'path': model_path,
@@ -188,87 +193,9 @@ class ModelSaver:
                     print(f"Could not read model {model_name} metadata: {e}")
                     continue
         
+        # Sort by saved date (newest first)
+        models_info.sort(key=lambda x: x['saved_date'], reverse=True)
+        
         if not models_info:
             print("No saved models found in the directory.")
         return models_info
-
-# Example Usage (assuming layers_and_networks.py and tensor_class.py are accessible)
-if __name__ == '__main__':
-    # Create a dummy VAE model for testing
-    print("Testing VAE save and load...")
-    try:
-        # Simulate some "training" by assigning random data to weights
-        num_epochs = 3
-        learning_rate = 0.001
-        batch_size = 64
-        
-        # Load data
-        train_loader, test_loader = load_mnist_data(batch_size)
-        train_generator = MNISTBatchGenerator(train_loader)
-        test_generator = MNISTBatchGenerator(test_loader)
-        input_dim, hidden_dim, latent_dim = 784, 256, 20
-        # Create model (assuming your MLP class is defined)
-        vae_model = VAE(
-            input_dim=input_dim,  # 28x28 pixels
-            hidden_dim=hidden_dim,  # Example architecture
-            latent_dim=latent_dim
-        )
-        
-        trainer = Train(
-            model=vae_model,
-            train_generator=train_generator,
-            test_generator=test_generator,
-            num_epochs=num_epochs,
-            learning_rate=learning_rate,
-            batch_size=batch_size,
-            early_stopping_patience=15
-        )
-
-        trainer.train()
-
-        saver_vae = ModelSaver(model=vae_model, model_name="my_test_vae_simplified", include_history={"epoch": 10, "loss": 0.123})
-        saved_vae_path = saver_vae.save_model()
-
-        loaded_vae, history_vae = ModelSaver.load_model(saved_vae_path)
-        print(f"VAE model loaded. History: {history_vae}")
-        
-        # Verification: Check if weights are loaded by comparing one parameter
-        original_vae_param_data = vae_model.parameters()[0].data #
-        loaded_vae_param_data = loaded_vae.parameters()[0].data #
-        np.testing.assert_array_almost_equal(original_vae_param_data, loaded_vae_param_data)
-        print("VAE weights verified successfully (first parameter).")
-
-    except Exception as e:
-        print(f"Error during VAE test: {e}")
-        import traceback
-        traceback.print_exc()
-
-    print("\nTesting NN save and load...")
-    try:
-        nn_model = NN(nin=100, nouts=[64, 32], activations=['relu', 'sigmoid'], dropout_rates=[0.1, 0.0]) #
-        # Simulate some "training"
-        for param in nn_model.parameters(): #
-            param.data = np.random.rand(*param.data.shape).astype(np.float32)
-            
-        saver_nn = ModelSaver(model=nn_model, model_name="my_test_nn_simplified", include_history={"steps": 1000, "accuracy": 0.95})
-        saved_nn_path = saver_nn.save_model()
-
-        loaded_nn, history_nn = ModelSaver.load_model(saved_nn_path)
-        print(f"NN model loaded. History: {history_nn}")
-
-        # Verification: Check if weights are loaded by comparing one parameter
-        original_nn_param_data = nn_model.parameters()[0].data #
-        loaded_nn_param_data = loaded_nn.parameters()[0].data #
-        np.testing.assert_array_almost_equal(original_nn_param_data, loaded_nn_param_data)
-        print("NN weights verified successfully (first parameter).")
-
-
-    except Exception as e:
-        print(f"Error during NN test: {e}")
-        import traceback
-        traceback.print_exc()
-
-    print("\nListing saved models:")
-    all_models = ModelSaver.list_saved_models()
-    for model_info in all_models:
-        print(f" - Name: {model_info['name']}, Type: {model_info['type']}, Path: {model_info['path']}, Saved: {model_info['saved_date']}")
