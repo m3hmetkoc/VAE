@@ -1,4 +1,5 @@
 import numpy as np
+import torch.nn as nn 
 
 class Tensor:
     """
@@ -143,6 +144,9 @@ class Tensor:
         def _backward(): self.grad += (power * (self.data ** (power-1))) * out.grad
         out._backward = _backward
         return out
+    def __rmul__(self, other): return self * other 
+    def __radd__(self, other): return self + other 
+    def __rsub__(self, other): return other + (self * -1)
 
     @staticmethod
     def _unbroadcast(grad, shape):
@@ -175,7 +179,7 @@ def reparameterize(mu: Tensor, logvar: Tensor) -> Tensor:
     """
     Applies the reparameterization trick:
       z = mu + std * eps,  eps ~ N(0,1)
-    Keep this in your model’s forward pass (not inside Tensor class).
+    Keep this in your models forward pass (not inside Tensor class).
     """
     std = (logvar * 0.5).exp()
     eps = Tensor(np.random.randn(*mu.data.shape), requires_grad=False)
@@ -188,8 +192,8 @@ def binary_cross_entropy(recon_x: Tensor, x: Tensor, eps=1e-7) -> Tensor:
     """
     recon_x_clamped = recon_x.clip(eps, 1 - eps)
     term1 = x * recon_x_clamped.log()
-    term2 = ((x * -1) + 1) * ((recon_x_clamped * -1) + 1).log()
-    return ((term1 + term2) * (-1)).sum() / recon_x.data.shape[0]
+    term2 = (1-x) * (1-recon_x_clamped).log()
+    return (-(term1 + term2)).sum() / recon_x.data.shape[0]
 
 
 def kl_divergence(mu: Tensor, logvar: Tensor) -> Tensor:
@@ -201,5 +205,5 @@ def kl_divergence(mu: Tensor, logvar: Tensor) -> Tensor:
     Which is equivalent to: 0.5 * sum(mu^2 + exp(logvar) - logvar - 1)
     """
     # Correct implementation
-    kld = ((mu**2 + logvar.exp() - logvar - 1) * 0.5).sum()
+    kld = (-0.5 * (1 + logvar - mu**2 - logvar.exp())).sum()
     return kld / mu.data.shape[0]

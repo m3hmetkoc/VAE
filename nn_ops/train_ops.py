@@ -1,7 +1,6 @@
 import numpy as np 
 import matplotlib.pyplot as plt # Keep if you adapt plotting later
 from .data_process import EarlyStopping
-# Assuming Value class is in .value_class and VAE loss functions are now part of it
 from .tensor_class import Tensor, kl_divergence, binary_cross_entropy
 
 class Train:
@@ -16,7 +15,9 @@ class Train:
         self.model_params = self.model.parameters()
 
         self.num_train_batches = len(train_generator.data_loader)
+        print(self.num_train_batches)
         self.num_test_batches = len(test_generator.data_loader)
+        print(self.num_test_batches)
         self.early_stopping = EarlyStopping(patience=early_stopping_patience)
 
         self.history = {
@@ -74,12 +75,10 @@ class Train:
             batch_count += 1
             
             # Clear gradients for next iteration
-            for param in self.model_params:
-                if param.grad is not None:
-                    param.grad = np.zeros_like(param.grad)
+            self.optimizer.zero_grad()
         
         # Calculate averages
-        avg_epoch_loss = total_epoch_loss / batch_count
+        avg_epoch_loss = total_epoch_loss / (batch_count * self.batch_size)
         avg_epoch_recon_loss = total_epoch_recon_loss / batch_count
         avg_epoch_kld_loss = total_epoch_kld_loss / batch_count
         
@@ -127,7 +126,7 @@ class Train:
         }
         
         # Initialize optimizer with lower learning rate for stability
-        self.optimizer = Adamax(self.model_params, lr=0.001)
+        self.optimizer = Adamax(self.model_params, self.learning_rate)
         
         for epoch in range(self.num_epochs):
             train_loss, train_recon, train_kld = self.train_one_epoch(epoch)

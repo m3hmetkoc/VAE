@@ -58,8 +58,8 @@ if __name__ == "__main__":
     start = time.time() 
     # Training loop
     num_epochs = 50
-    learning_rate = 0.0001
-    batch_size = 128
+    learning_rate = 0.001
+    batch_size = 64
     
     # Load data
     train_loader, test_loader = load_mnist_data(batch_size)

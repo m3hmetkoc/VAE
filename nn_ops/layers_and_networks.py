@@ -170,6 +170,9 @@ class Encoder:
         self.fc1.eval()
         self.fc_mu.eval()
         self.fc_logvar.eval()
+
+    def collect_params(self):
+        return self.fc1.parameters() + self.fc_mu.parameters() + self.fc_logvar.parameters()
     
 # Decoder
 class Decoder:
@@ -188,7 +191,9 @@ class Decoder:
     def eval(self): # Added
         self.fc1.eval()
         self.fc2.eval()
-    
+
+    def collect_params(self):
+        return self.fc1.parameters() + self.fc2.parameters()
 # VAE
 class VAE:
     def __init__(self, input_dim, hidden_dim, latent_dim):
@@ -204,10 +209,16 @@ class VAE:
     def __call__(self, x): # Make VAE callable like MLP
         return self.forward(x)
 
-    def parameters(self): # Corrected to call Encoder/Decoder parameters methods
-        ps = [] 
-        for m in [self.encoder.fc1, self.encoder.fc_mu, self.encoder.fc_logvar, self.decoder.fc1, self.decoder.fc2]:
-            ps.extend(m.parameters())
+    # def parameters(self): # Corrected to call Encoder/Decoder parameters methods
+    #     ps = [] 
+    #     for m in [self.encoder.fc1, self.encoder.fc_mu, self.encoder.fc_logvar, self.decoder.fc1, self.decoder.fc2]:
+    #         ps.extend(m.parameters())
+    #     return ps 
+
+    def parameters(self):
+        ps = []
+        for p in [self.encoder.collect_params() + self.decoder.collect_params()]:
+            ps.extend(p) 
         return ps 
 
     def train(self): # Corrected
