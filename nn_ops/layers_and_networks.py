@@ -1,5 +1,5 @@
 import numpy as np 
-from .tensor_class import Tensor, reparameterize
+from tensor_class import Tensor, reparameterize
 
 class Layer:
     def __init__(self, nin, nout, activation=None, dropout_rate=0.0, init_method='he'):
@@ -97,10 +97,10 @@ class Dropout(Layer):
     def parameters(self):
         return []
 
-class MLP:
+class NN:
     def __init__(self, nin, nouts, activations, dropout_rates=None, init_method='he'):
         """
-        Enhanced MLP with dropout and initialization options
+        Enhanced Neural Network with dropout and initialization options
         """
         if dropout_rates is None:
             dropout_rates = [0.0] * len(nouts)
@@ -147,13 +147,12 @@ class MLP:
         for layer in self.layers:
             layer.eval()
 
-# Encoder
+
 class Encoder:
     def __init__(self, input_dim, hidden_dim, latent_dim):
         self.fc1 = Layer(input_dim, hidden_dim, activation='relu', init_method='he')
         self.fc_mu = Layer(hidden_dim, latent_dim, activation=None)
         self.fc_logvar = Layer(hidden_dim, latent_dim, activation=None)
-        # self.layers = [self.fc1, self.fc_mu, self.fc_logvar] # This list is not strictly necessary if using methods below
 
     def __call__(self, x):
         h = self.fc1(x)
@@ -161,12 +160,12 @@ class Encoder:
         logvar = self.fc_logvar(h)
         return mu, logvar
     
-    def train(self): # Added
+    def train(self): 
         self.fc1.train()
         self.fc_mu.train()
         self.fc_logvar.train()
 
-    def eval(self): # Added
+    def eval(self): 
         self.fc1.eval()
         self.fc_mu.eval()
         self.fc_logvar.eval()
@@ -174,7 +173,7 @@ class Encoder:
     def collect_params(self):
         return self.fc1.parameters() + self.fc_mu.parameters() + self.fc_logvar.parameters()
     
-# Decoder
+
 class Decoder:
     def __init__(self, latent_dim, hidden_dim, output_dim):
         self.fc1 = Layer(latent_dim, hidden_dim, activation='relu', init_method='he')
@@ -194,26 +193,21 @@ class Decoder:
 
     def collect_params(self):
         return self.fc1.parameters() + self.fc2.parameters()
-# VAE
+
+
 class VAE:
     def __init__(self, input_dim, hidden_dim, latent_dim):
         self.encoder = Encoder(input_dim, hidden_dim, latent_dim)
-        self.decoder = Decoder(latent_dim, hidden_dim, input_dim) # output_dim is input_dim for reconstruction
+        self.decoder = Decoder(latent_dim, hidden_dim, input_dim) #output_dim is input_dim for reconstruction
 
     def forward(self, x): # This is the main forward call
         mu, logvar = self.encoder(x)
-        z = reparameterize(mu, logvar)
+        z = reparameterize(mu, logvar) # reparameterize trick to let gradients flow through the latent space. 
         reconstructed = self.decoder(z)
         return reconstructed, mu, logvar
     
-    def __call__(self, x): # Make VAE callable like MLP
+    def __call__(self, x): 
         return self.forward(x)
-
-    # def parameters(self): # Corrected to call Encoder/Decoder parameters methods
-    #     ps = [] 
-    #     for m in [self.encoder.fc1, self.encoder.fc_mu, self.encoder.fc_logvar, self.decoder.fc1, self.decoder.fc2]:
-    #         ps.extend(m.parameters())
-    #     return ps 
 
     def parameters(self):
         ps = []
@@ -221,11 +215,11 @@ class VAE:
             ps.extend(p) 
         return ps 
 
-    def train(self): # Corrected
+    def train(self): 
         self.encoder.train()
         self.decoder.train()
 
-    def eval(self): # Corrected
+    def eval(self): 
         self.encoder.eval()
         self.decoder.eval()
 

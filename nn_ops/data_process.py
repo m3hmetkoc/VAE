@@ -1,7 +1,7 @@
 import os
 import torch
 from torchvision import datasets, transforms
-from .tensor_class import Tensor 
+from tensor_class import Tensor 
 
 def load_mnist_data(batch_size=64, data_path='./data'):
     """
@@ -59,7 +59,7 @@ class MNISTBatchGenerator:
 
     def get_next_batch(self):
         """
-        Get next batch and convert it directly into Value objects.
+        Get next batch and convert it directly into Tensor objects.
         """
         try:
             images, labels = next(self.iterator)
@@ -68,7 +68,7 @@ class MNISTBatchGenerator:
             images, labels = next(self.iterator)
 
         # Reshape images to (batch_size, 784)
-        images = images.view(images.shape[0], -1)  # Keep it in PyTorch Tensor format
+        images = images.view(images.shape[0], -1)  # in PyTorch Tensor format
 
         # Convert labels to one-hot encoding
         labels_one_hot = torch.zeros(labels.size(0), 10)
