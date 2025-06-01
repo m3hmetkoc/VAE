@@ -9,10 +9,7 @@ def load_mnist_data(batch_size=64, data_path='./data'):
     a specified path if the dataset already exists, otherwise it downloads it.
     """
     # Define the transformation pipeline
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.5,), (0.5,))  # Normalize to [-1, 1]
-    ])
+    transform = transforms.ToTensor()  # Normalize to [0, 1]
     
     # Check if the dataset exists (by verifying both train and test folders)
     train_exists = os.path.exists(os.path.join(data_path, 'MNIST', 'raw', 'train-images-idx3-ubyte'))

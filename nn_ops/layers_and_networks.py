@@ -446,7 +446,7 @@ class VAE_old:
         self.init_method = init_method
         
         # Use FlexibleVAE internally with single hidden layer
-        self.flexible_vae = FlexibleVAE(
+        self.flexible_vae = VAE(
             input_dim=input_dim,
             latent_dim=latent_dim,
             encoder_hidden_dims=[hidden_dim],
