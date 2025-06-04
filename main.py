@@ -120,12 +120,14 @@ def train_model(model_config, training_config, model_name=None):
     # Initialize trainer
     trainer = Train(
         model=model,
+        latent_dim=model.latent_dim,
         train_generator=train_generator,
         test_generator=test_generator,
         num_epochs=training_config['num_epochs'],
         learning_rate=training_config['learning_rate'],
         batch_size=training_config['batch_size'],
-        early_stopping_patience=training_config.get('early_stopping_patience', 15)
+        early_stopping_patience=training_config.get('early_stopping_patience', 15),
+        
     )
     
     # Train the model

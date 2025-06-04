@@ -5,8 +5,9 @@ from .data_process import EarlyStopping
 from .tensor_class import Tensor, kl_divergence, binary_cross_entropy
 
 class Train:
-    def __init__(self, model, train_generator, test_generator, num_epochs, learning_rate, batch_size, early_stopping_patience=5):
+    def __init__(self, model, latent_dim, train_generator, test_generator, num_epochs, learning_rate, batch_size, early_stopping_patience=5):
         self.model = model
+        self.latent_dimension_size = latent_dim
         self.train_generator = train_generator
         self.test_generator = test_generator
         self.num_epochs = num_epochs
@@ -153,13 +154,13 @@ class Train:
             if param.grad is not None:
                 param.grad = np.clip(param.grad, -clip_value, clip_value)
 
-    def _generate_sample_image(self, epoch, latent_dim=20, save_path="images"):
+    def _generate_sample_image(self, epoch, save_path="images"):
         """Generate and save a sample image during training"""
         try:
             import os
             os.makedirs(save_path, exist_ok=True)
             
-            z = Tensor(np.random.randn(1, latent_dim), requires_grad=False)
+            z = Tensor(np.random.randn(1, self.latent_dimension_size), requires_grad=False)
             out = self.model.decoder(z)
             out_data = out.data.reshape(28, 28)
             

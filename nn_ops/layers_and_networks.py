@@ -71,28 +71,66 @@ class Layer:
             'init_method': self.init_method
         }
     
-class Dropout(Layer):
+# --- UPDATED Dropout Class ---
+class Dropout(Layer):  # Inherits from Layer
     def __init__(self, p=0.5):
+        """
+        Initializes the Dropout layer.
+        p: Probability of an element to be zeroed.
+        """
+        # Note: This __init__ does not call super().__init__(...) from Layer.
+        # This is acceptable as Dropout doesn't use Layer's W, b, nin, nout.
+        # It primarily needs 'p' and the 'training' flag (which Layer's __call__ will manage).
         self.p = p
-        self.mask = None
-        self.training = True
+        self.training = True  # Default training state
 
-    def __call__(self, x):
-        if not self.training:
+    def __call__(self, x: Tensor) -> Tensor:
+        """
+        Applies dropout to the input tensor x if in training mode.
+        """
+        if not self.training or self.p == 0.0:
+            # If not training or dropout probability is zero, return input as is.
             return x
         
-        self.mask = np.random.binomial(1, 1-self.p, size=x.data.shape) / (1-self.p)
-        output = Tensor(x.data * self.mask, _children=(x,), _op="dropout")
+        # Generate the dropout mask for this specific forward pass.
+        # The mask is scaled by 1/(1-p) (inverted dropout) to keep the expected sum of activations constant.
+        if self.p >= 1.0:  # Edge case: if p=1 (or more), drop all elements
+            mask_np = np.zeros_like(x.data, dtype=np.float32)
+        else:
+            # np.random.binomial results in 0 or 1.
+            # (1 - self.p) is the probability of keeping an element (mask value = 1).
+            mask_np = np.random.binomial(1, 1 - self.p, size=x.data.shape).astype(np.float32)
+            mask_np /= (1 - self.p)  # Scale the kept elements
         
-        def _backward():
-            if x.requires_grad:
-                x.grad += output.grad * self.mask
-                
-        output._backward = _backward
-        return output
+        # Apply the mask: multiply input tensor's data by the numpy mask
+        out_data = x.data * mask_np
+        
+        # Create the output Tensor. Its requires_grad status should depend on the input x.
+        out = Tensor(out_data, requires_grad=x.requires_grad)
+        out._prev = [x]  # Set the predecessor for autograd graph tracking
+        out._op = 'dropout'
+
+        # Define the backward pass operation for this dropout instance
+        if x.requires_grad:
+            # This inner function `_backward_operation` will form the closure.
+            # It captures `mask_np` specific to this forward pass.
+            def define_backward_operation(mask_for_this_op):
+                def _backward_operation_fn():
+                    # Gradient is passed through the same mask used in the forward pass
+                    x.grad += out.grad * mask_for_this_op
+                return _backward_operation_fn
+
+            out._backward = define_backward_operation(mask_np) # Assign the specific backward function
+            
+        return out
 
     def parameters(self):
+        # Dropout has no learnable parameters
         return []
+
+    # train() and eval() methods are inherited from Layer.
+    # The containing Layer's __call__ method correctly sets `self.dropout.training = self.training`,
+    # so this Dropout instance's `self.training` flag will be appropriately managed.
 
 #Basic neural network implementation
 class NN:
