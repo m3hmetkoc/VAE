@@ -18,13 +18,16 @@ project/
 ├── main.py                 # Universal model training script
 ├── generate_digits.py      # VAE digit generation script
 ├── model_configs.json      # Example model configurations
-├── save_load_model.py      # Model saving/loading utilities
 ├── nn_ops/                 # Neural network operations module
 │   ├── __init__.py
 │   ├── layers_and_networks.py
+│   ├── save_load_model.py
+│   ├── tensor_class.py
 │   ├── data_process.py
 │   └── train_ops.py
-└── saved_models/           # Directory for saved models (auto-created)
+│
+└── saved_models/
+└── images/           # Directory for saved models (auto-created)
 ```
 
 ## 🛠️ Installation
