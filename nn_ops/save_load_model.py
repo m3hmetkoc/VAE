@@ -3,8 +3,6 @@ import os
 import datetime
 import json
 import pickle 
-from .data_process import MNISTBatchGenerator, load_mnist_data
-from .train_ops import Train
 from .layers_and_networks import VAE, NN, VAE_old 
 
 

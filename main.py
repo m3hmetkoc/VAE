@@ -1,4 +1,4 @@
-from nn_ops import MNISTBatchGenerator, VAE, NN, VAE_old, Tensor, ModelSaver, Train, load_mnist_data
+from nn_ops import MNISTBatchGenerator, VAE, NN, VAE_old, Tensor, ModelSaver, Train, load_dataset 
 import time
 import argparse
 import json
@@ -104,14 +104,14 @@ def train_model(model_config, training_config, model_name=None):
     print(f"Epochs: {training_config['num_epochs']}")
     print(f"Batch Size: {training_config['batch_size']}")
     print(f"Learning Rate: {training_config['learning_rate']}")
+    print(f"Loading {training_config['dataset']} dataset") 
     print("="*60)
     
     # Load data
-    print("Loading MNIST data...")
-    train_loader, test_loader = load_mnist_data(training_config['batch_size'])
+    train_loader, test_loader = load_dataset(batch_size=training_config['batch_size'], dataset_name=training_config['dataset']) 
     train_generator = MNISTBatchGenerator(train_loader)
     test_generator = MNISTBatchGenerator(test_loader)
-    
+    print(f"Successfully loaded the {training_config['dataset']} dataset.") 
     # Create model
     print("Creating model...")
     model = create_model_from_config(model_config)
@@ -164,6 +164,7 @@ def main():
     parser.add_argument('--config', type=str, help='Path to model configuration JSON file')
     parser.add_argument('--model-type', type=str, choices=['VAE', 'NN', 'VAE_old'], 
                        default='VAE', help='Type of model to train (if no config file)')
+    parser.add_argument('--dataset', type=str, default='mnist', help='Specify the dataset to train')
     parser.add_argument('--epochs', type=int, default=50, help='Number of training epochs')
     parser.add_argument('--batch-size', type=int, default=64, help='Batch size for training')
     parser.add_argument('--learning-rate', type=float, default=0.001, help='Learning rate')
@@ -210,7 +211,8 @@ def main():
     training_config = {
         'num_epochs': args.epochs,
         'batch_size': args.batch_size,
-        'learning_rate': args.learning_rate
+        'learning_rate': args.learning_rate,
+        'dataset': args.dataset 
     }
     
     # Train the model
