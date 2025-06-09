@@ -104,8 +104,8 @@ def train_model(model_config, training_config, model_name=None):
     
     # Load data
     train_loader, test_loader = load_dataset(batch_size=training_config['batch_size'], dataset_name=training_config['dataset']) 
-    train_generator = MNISTBatchGenerator(train_loader, cvae=training_config['cvae'])
-    test_generator = MNISTBatchGenerator(test_loader, cvae=training_config['cvae'])
+    train_generator = MNISTBatchGenerator(train_loader)
+    test_generator = MNISTBatchGenerator(test_loader)
     print(f"Successfully loaded the {training_config['dataset']} dataset.") 
     # Create model
     print("Creating model...")

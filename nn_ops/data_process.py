@@ -87,10 +87,9 @@ def load_dataset(dataset_name='mnist', batch_size=64, data_path='./data'):
 
 
 class MNISTBatchGenerator:
-    def __init__(self, data_loader, cvae):
+    def __init__(self, data_loader):
         self.data_loader = data_loader
         self.iterator = iter(data_loader)
-        self.cvae = cvae 
 
     def get_next_batch(self):
         """
@@ -108,16 +107,8 @@ class MNISTBatchGenerator:
         # Convert labels to one-hot encoding
         labels_one_hot = torch.zeros(labels.size(0), 10)
         labels_one_hot.scatter_(1, labels.unsqueeze(1), 1)
-        
-        if self.cvae:
-            data = torch.cat([images, labels_one_hot], dim=1)
-            return (
-                Tensor(data.numpy(), requires_grad=False), # [x, y] input
-                Tensor(images.numpy(), requires_grad=False),
-                Tensor(labels_one_hot.numpy(), requires_grad=False) # target for reconstruction
-            )
-        else:
-            return Tensor(images.numpy(), requires_grad=False), 0, 0 
+
+        return Tensor(images.numpy(), requires_grad=False), Tensor(labels_one_hot.numpy(), requires_grad=False)
 
 
 class EarlyStopping:

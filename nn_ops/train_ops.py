@@ -47,13 +47,15 @@ class Train:
             self.optimizer.zero_grad()
             
             try:
-                X_batch, X_data, labels = self.train_generator.get_next_batch()
-
+                X_batch, labels = self.train_generator.get_next_batch()
+                if self.train_cvae:
                 # Forward pass
-                reconstructed_x, mu, logvar = self.model.forward(X_batch, labels) 
-
+                    X_concat = Tensor(np.concatenate([X_batch.data, labels.data], axis=1), requires_grad=False)
+                    reconstructed_x, mu, logvar = self.model.forward(X_concat, labels) 
+                else:
+                    reconstructed_x, mu, logvar = self.model.forward(X_batch, labels) 
                 # Losses
-                recon_loss = binary_cross_entropy(recon_x=reconstructed_x, x=X_data)
+                recon_loss = binary_cross_entropy(recon_x=reconstructed_x, x=X_batch)
                 kld_loss = kl_divergence(mu, logvar)
                 
                 # Total loss with beta weighting (gradual beta increase for stable training)
@@ -112,13 +114,15 @@ class Train:
         
         for batch_idx in val_pbar:
             try:
-                X_batch, X_data, labels = self.test_generator.get_next_batch()
-
+                X_batch, labels = self.train_generator.get_next_batch()
+                if self.train_cvae:
                 # Forward pass
-                reconstructed_x, mu, logvar = self.model.forward(X_batch, labels) 
-
+                    X_concat = Tensor(np.concatenate([X_batch.data, labels.data], axis=1), requires_grad=False)
+                    reconstructed_x, mu, logvar = self.model.forward(X_concat, labels) 
+                else:
+                    reconstructed_x, mu, logvar = self.model.forward(X_batch, labels) 
                 # Losses
-                recon_loss = binary_cross_entropy(recon_x=reconstructed_x, x=X_data)
+                recon_loss = binary_cross_entropy(recon_x=reconstructed_x, x=X_batch)
                 kld_loss = kl_divergence(mu, logvar)
                 
                 beta = 1.0  # Use full beta for evaluation
@@ -149,11 +153,6 @@ class Train:
         
         return avg_val_loss, avg_val_recon_loss, avg_val_kld_loss
 
-
-
-
-
-#------------------------------------------------
 
     def _clip_gradients(self, clip_value=1.0):
         """Gradient clipping for stability"""
@@ -204,8 +203,7 @@ class Train:
             # Update learning rate
             current_lr = self.lr_schedule(epoch)
             self.optimizer.lr = current_lr
-
-
+            
             train_loss, train_recon, train_kld = self.train_one_epoch(epoch)
             
             # Evaluate on validation set

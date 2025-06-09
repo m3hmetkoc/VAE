@@ -1,0 +1,36 @@
+{
+    "model_type": "VAE",
+    "input_dim": 784,
+    "latent_dim": 32,
+    "encoder_hidden_dims": [
+        512,
+        256,
+        128
+    ],
+    "decoder_hidden_dims": [
+        128,
+        256,
+        512
+    ],
+    "encoder_activations": [
+        "relu",
+        "relu",
+        "relu"
+    ],
+    "decoder_activations": [
+        "relu",
+        "relu",
+        "sigmoid"
+    ],
+    "encoder_dropout_rates": [
+        0.2,
+        0.3,
+        0.2
+    ],
+    "decoder_dropout_rates": [
+        0.2,
+        0.3,
+        0.0
+    ],
+    "init_method": "he"
+}

@@ -382,7 +382,8 @@ class VAE:
                  encoder_activations: list = None, decoder_activations: list = None,
                  encoder_dropout_rates: list = None, decoder_dropout_rates: list = None,
                  init_method='he',
-                 cvae=False):
+                 cvae=False,
+                 model_type="VAE"):
         """
         Flexible VAE with configurable encoder and decoder architectures
         
@@ -426,6 +427,9 @@ class VAE:
         self.decoder_dropout_rates = decoder_dropout_rates
         self.init_method = init_method
         self.cvae = cvae 
+        self.model_type = model_type
+        
+        if self.cvae: self.model_type = "CVAE"
         
         self.encoder = FlexibleEncoder(
             input_dim=input_dim,
@@ -462,8 +466,12 @@ class VAE:
         return params
 
     def get_config(self):
+        if self.cvae:
+            model_type = "CVAE"
+        else:
+            model_type = "VAE"
         return {
-            'model_type': 'VAE',
+            'model_type': model_type,
             'input_dim': self.input_dim,
             'latent_dim': self.latent_dim,
             'encoder_hidden_dims': self.encoder_hidden_dims,
@@ -473,7 +481,8 @@ class VAE:
             'encoder_dropout_rates': self.encoder_dropout_rates,
             'decoder_dropout_rates': self.decoder_dropout_rates,
             'init_method': self.init_method,
-            'cvae': self.cvae
+            'cvae': self.cvae,
+            'model_type': self.model_type
         }
 
     def train(self): 

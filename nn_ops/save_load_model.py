@@ -25,7 +25,7 @@ def convert_to_json_serializable(item):
     return item
 
 class ModelSaver:
-    def __init__(self, model, model_name=None, include_history=None, base_path='/saved_models', cvae=False):
+    def __init__(self, model, model_name=None, include_history=None, base_path='saved_models', cvae=False):
         """
         Initialize ModelSaver with a base directory for saved models
         """
@@ -42,6 +42,7 @@ class ModelSaver:
         Save the model, its architecture, and training history.
         Uses the model's get_config() method to save architecture information.
         """
+        
         model_name_to_use = self.model_name
         if model_name_to_use is None:
             timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -105,7 +106,7 @@ class ModelSaver:
         # Reconstruct model based on type
         loaded_model = None
 
-        if model_type == 'VAE':
+        if model_type == 'VAE' or model_type == 'CVAE':
             loaded_model = VAE(
                 input_dim=architecture['input_dim'],
                 latent_dim=architecture['latent_dim'],
@@ -116,7 +117,8 @@ class ModelSaver:
                 encoder_dropout_rates=architecture.get('encoder_dropout_rates'),
                 decoder_dropout_rates=architecture.get('decoder_dropout_rates'),
                 init_method=architecture.get('init_method', 'he'),
-                cvae=architecture.get('cvae', False)    
+                cvae=architecture.get('cvae', False),
+                model_type=architecture.get('model_type', 'VAE')
             )
         elif model_type == 'NN':
             loaded_model = NN(
