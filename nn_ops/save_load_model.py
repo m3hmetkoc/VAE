@@ -3,7 +3,7 @@ import os
 import datetime
 import json
 import pickle 
-from .layers_and_networks import VAE, NN, VAE_old 
+from .layers_and_networks import VAE, NN
 
 
 def convert_to_json_serializable(item):
@@ -25,7 +25,7 @@ def convert_to_json_serializable(item):
     return item
 
 class ModelSaver:
-    def __init__(self, model, model_name=None, include_history=None, base_path='/saved_models'):
+    def __init__(self, model, model_name=None, include_history=None, base_path='/saved_models', cvae=False):
         """
         Initialize ModelSaver with a base directory for saved models
         """
@@ -33,6 +33,7 @@ class ModelSaver:
         self.model_name = model_name
         self.include_history = include_history
         self.base_path = base_path
+        self.cvae = cvae 
 
         os.makedirs(self.base_path, exist_ok=True)
 
@@ -103,14 +104,8 @@ class ModelSaver:
 
         # Reconstruct model based on type
         loaded_model = None
-        if model_type == 'VAE_old':
-            loaded_model = VAE_old(
-                input_dim=architecture['input_dim'],
-                hidden_dim=architecture['hidden_dim'],
-                latent_dim=architecture['latent_dim'],
-                init_method=architecture.get('init_method', 'he')
-            )
-        elif model_type == 'VAE':
+
+        if model_type == 'VAE':
             loaded_model = VAE(
                 input_dim=architecture['input_dim'],
                 latent_dim=architecture['latent_dim'],
@@ -120,7 +115,8 @@ class ModelSaver:
                 decoder_activations=architecture.get('decoder_activations'),
                 encoder_dropout_rates=architecture.get('encoder_dropout_rates'),
                 decoder_dropout_rates=architecture.get('decoder_dropout_rates'),
-                init_method=architecture.get('init_method', 'he')
+                init_method=architecture.get('init_method', 'he'),
+                cvae=architecture.get('cvae', False)    
             )
         elif model_type == 'NN':
             loaded_model = NN(
@@ -184,6 +180,7 @@ class ModelSaver:
                             'name': model_name,
                             'path': model_path,
                             'type': architecture_content.get('model_type', 'Unknown'),
+                            'cvae': architecture_content.get('cvae', False), 
                             'architecture': architecture_content,
                             'saved_date': datetime.datetime.fromtimestamp(os.path.getctime(model_path))
                         })

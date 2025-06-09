@@ -189,7 +189,7 @@ class NN:
 
 
 class FlexibleEncoder:
-    def __init__(self, input_dim, hidden_dims, latent_dim, activations=None, dropout_rates=None, init_method='he'):
+    def __init__(self, input_dim, hidden_dims, latent_dim, activations=None, dropout_rates=None, init_method='he', cvae=False):
         """
         Flexible encoder with configurable layers
         
@@ -205,6 +205,7 @@ class FlexibleEncoder:
         self.hidden_dims = hidden_dims if hidden_dims else []
         self.latent_dim = latent_dim
         self.init_method = init_method
+        self.cvae = cvae 
         
         # Set default activations if not provided
         if activations is None:
@@ -221,10 +222,14 @@ class FlexibleEncoder:
         self.layers = []
         if hidden_dims:
             # First hidden layer
-            self.layers.append(
-                Layer(input_dim, hidden_dims[0], activations[0], dropout_rates[0], init_method)
-            )
-            
+            if self.cvae:
+                self.layers.append(
+                    Layer(input_dim+10, hidden_dims[0], activations[0], dropout_rates[0], init_method)
+                )
+            else:
+                self.layers.append(
+                    Layer(input_dim, hidden_dims[0], activations[0], dropout_rates[0], init_method)
+                )
             # Additional hidden layers
             for i in range(1, len(hidden_dims)):
                 self.layers.append(
@@ -279,7 +284,7 @@ class FlexibleEncoder:
     
 
 class FlexibleDecoder:
-    def __init__(self, latent_dim, hidden_dims, output_dim, activations=None, dropout_rates=None, init_method='he'):
+    def __init__(self, latent_dim, hidden_dims, output_dim, activations=None, dropout_rates=None, init_method='he', cvae=False):
         """
         Flexible decoder with configurable layers
         
@@ -295,7 +300,7 @@ class FlexibleDecoder:
         self.hidden_dims = hidden_dims if hidden_dims else []
         self.output_dim = output_dim
         self.init_method = init_method
-        
+        self.cvae = cvae 
         # Set default activations if not provided
         if activations is None:
             print("Activation functions has not specified")
@@ -314,10 +319,14 @@ class FlexibleDecoder:
         
         if hidden_dims:
             # First layer: latent_dim -> first hidden
-            self.layers.append(
-                Layer(latent_dim, hidden_dims[0], activations[0], dropout_rates[0], init_method)
-            )
-            
+            if self.cvae:
+                self.layers.append(
+                    Layer(latent_dim+10, hidden_dims[0], activations[0], dropout_rates[0], init_method)
+                )
+            else:
+                self.layers.append(
+                    Layer(latent_dim, hidden_dims[0], activations[0], dropout_rates[0], init_method)
+                )
             # Hidden layers
             for i in range(1, len(hidden_dims)):
                 self.layers.append(
@@ -372,7 +381,8 @@ class VAE:
                  encoder_hidden_dims: list = None, decoder_hidden_dims: list = None,
                  encoder_activations: list = None, decoder_activations: list = None,
                  encoder_dropout_rates: list = None, decoder_dropout_rates: list = None,
-                 init_method='he'):
+                 init_method='he',
+                 cvae=False):
         """
         Flexible VAE with configurable encoder and decoder architectures
         
@@ -415,6 +425,7 @@ class VAE:
         self.encoder_dropout_rates = encoder_dropout_rates
         self.decoder_dropout_rates = decoder_dropout_rates
         self.init_method = init_method
+        self.cvae = cvae 
         
         self.encoder = FlexibleEncoder(
             input_dim=input_dim,
@@ -422,7 +433,8 @@ class VAE:
             latent_dim=latent_dim,
             activations=encoder_activations,
             dropout_rates=encoder_dropout_rates,
-            init_method=init_method
+            init_method=init_method,
+            cvae=self.cvae 
         )
         
         self.decoder = FlexibleDecoder(
@@ -431,17 +443,17 @@ class VAE:
             output_dim=input_dim,
             activations=decoder_activations,
             dropout_rates=decoder_dropout_rates,
-            init_method=init_method
+            init_method=init_method,
+            cvae=self.cvae
         )
 
-    def forward(self, x):
+    def forward(self, x, labels):
         mu, logvar = self.encoder(x)
         z = reparameterize(mu, logvar)
+        if self.cvae:
+            z = Tensor(np.concatenate([z.data, labels.data], axis=1))
         reconstructed = self.decoder(z)
         return reconstructed, mu, logvar
-    
-    def __call__(self, x): 
-        return self.forward(x)
 
     def parameters(self):
         params = []
@@ -460,7 +472,8 @@ class VAE:
             'decoder_activations': self.decoder_activations,
             'encoder_dropout_rates': self.encoder_dropout_rates,
             'decoder_dropout_rates': self.decoder_dropout_rates,
-            'init_method': self.init_method
+            'init_method': self.init_method,
+            'cvae': self.cvae
         }
 
     def train(self): 
@@ -470,48 +483,3 @@ class VAE:
     def eval(self): 
         self.encoder.eval()
         self.decoder.eval()
-
-
-# original VAE implementation
-class VAE_old:
-    def __init__(self, input_dim, hidden_dim, latent_dim, init_method='he'):
-        """
-        Original VAE implementation (kept for backward compatibility)
-        """
-        self.input_dim = input_dim
-        self.hidden_dim = hidden_dim
-        self.latent_dim = latent_dim
-        self.init_method = init_method
-        
-        # Use FlexibleVAE internally with single hidden layer
-        self.flexible_vae = VAE(
-            input_dim=input_dim,
-            latent_dim=latent_dim,
-            encoder_hidden_dims=[hidden_dim],
-            decoder_hidden_dims=[hidden_dim],
-            init_method=init_method
-        )
-
-    def forward(self, x):
-        return self.flexible_vae.forward(x)
-    
-    def __call__(self, x): 
-        return self.forward(x)
-
-    def parameters(self):
-        return self.flexible_vae.parameters()
-
-    def get_config(self):
-        return {
-            'model_type': 'VAE',
-            'input_dim': self.input_dim,
-            'hidden_dim': self.hidden_dim,
-            'latent_dim': self.latent_dim,
-            'init_method': self.init_method
-        }
-
-    def train(self): 
-        self.flexible_vae.train()
-
-    def eval(self): 
-        self.flexible_vae.eval()

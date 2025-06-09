@@ -190,15 +190,13 @@ def main():
                 print()
                 
                 # Show VAE models specifically
-                if model_info['type'] in ['VAE', 'VAE_old']:
+                if model_info['type'] in ['VAE']:
                     arch = model_info['architecture']
                     if model_info['type'] == 'VAE':
                         print(f"   Latent dim: {arch.get('latent_dim')}")
                         print(f"   Encoder layers: {arch.get('encoder_hidden_dims')}")
                         print(f"   Decoder layers: {arch.get('decoder_hidden_dims')}")
-                    elif model_info['type'] == 'VAE_old':
-                        print(f"   Latent dim: {arch.get('latent_dim')}")
-                        print(f"   Hidden dim: {arch.get('hidden_dim')}")
+
                     print()
         return 0
     
@@ -214,7 +212,7 @@ def main():
         
         # Check if it's a VAE model
         model_type = type(loaded_model).__name__
-        if model_type not in ['VAE', 'VAE_old']:
+        if model_type not in ['VAE']:
             print(f"Error: This script is for VAE models only. Loaded model type: {model_type}")
             return 1
         

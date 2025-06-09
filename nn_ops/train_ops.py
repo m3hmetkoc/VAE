@@ -5,7 +5,7 @@ from .data_process import EarlyStopping
 from .tensor_class import Tensor, kl_divergence, binary_cross_entropy
 
 class Train:
-    def __init__(self, model, latent_dim, train_generator, test_generator, num_epochs, learning_rate, batch_size, early_stopping_patience=5):
+    def __init__(self, model, latent_dim, train_generator, test_generator, num_epochs, learning_rate, batch_size, train_cvae, early_stopping_patience=5):
         self.model = model
         self.latent_dimension_size = latent_dim
         self.train_generator = train_generator
@@ -13,10 +13,11 @@ class Train:
         self.num_epochs = num_epochs
         self.learning_rate = learning_rate
         self.batch_size = batch_size
+        self.train_cvae = train_cvae
         self.model_params = self.model.parameters()
         self.num_test_batches = len(test_generator.data_loader)
         self.num_train_batches = len(train_generator.data_loader)
-        
+
         self.early_stopping_patience = early_stopping_patience
         self.early_stopping = EarlyStopping(patience=early_stopping_patience)
 
@@ -46,13 +47,13 @@ class Train:
             self.optimizer.zero_grad()
             
             try:
-                X_batch, _ = self.train_generator.get_next_batch()
-                
+                X_batch, X_data, labels = self.train_generator.get_next_batch()
+
                 # Forward pass
-                reconstructed_x, mu, logvar = self.model(X_batch)
-                
-                # Calculate losses
-                recon_loss = binary_cross_entropy(recon_x=reconstructed_x, x=X_batch)
+                reconstructed_x, mu, logvar = self.model.forward(X_batch, labels) 
+
+                # Losses
+                recon_loss = binary_cross_entropy(recon_x=reconstructed_x, x=X_data)
                 kld_loss = kl_divergence(mu, logvar)
                 
                 # Total loss with beta weighting (gradual beta increase for stable training)
@@ -111,13 +112,13 @@ class Train:
         
         for batch_idx in val_pbar:
             try:
-                X_batch, _ = self.test_generator.get_next_batch()
-                
-                # Forward pass (no gradient computation needed)
-                reconstructed_x, mu, logvar = self.model(X_batch)
-                
-                # Calculate losses
-                recon_loss = binary_cross_entropy(recon_x=reconstructed_x, x=X_batch)
+                X_batch, X_data, labels = self.test_generator.get_next_batch()
+
+                # Forward pass
+                reconstructed_x, mu, logvar = self.model.forward(X_batch, labels) 
+
+                # Losses
+                recon_loss = binary_cross_entropy(recon_x=reconstructed_x, x=X_data)
                 kld_loss = kl_divergence(mu, logvar)
                 
                 beta = 1.0  # Use full beta for evaluation
@@ -148,6 +149,12 @@ class Train:
         
         return avg_val_loss, avg_val_recon_loss, avg_val_kld_loss
 
+
+
+
+
+#------------------------------------------------
+
     def _clip_gradients(self, clip_value=1.0):
         """Gradient clipping for stability"""
         for param in self.model_params:
@@ -159,8 +166,10 @@ class Train:
         try:
             import os
             os.makedirs(save_path, exist_ok=True)
-            
-            z = Tensor(np.random.randn(1, self.latent_dimension_size), requires_grad=False)
+            if self.train_cvae:
+                z = Tensor(data = np.concatenate([np.random.randn(1, self.latent_dimension_size), np.array([[0., 0., 0., 0., 0., 0., 0., 1., 0., 0.]])], axis=1), requires_grad=False)
+            else:
+                z = Tensor(np.random.randn(1, self.latent_dimension_size), requires_grad=False)
             out = self.model.decoder(z)
             out_data = out.data.reshape(28, 28)
             
@@ -195,8 +204,8 @@ class Train:
             # Update learning rate
             current_lr = self.lr_schedule(epoch)
             self.optimizer.lr = current_lr
-            
-            # Train one epoch
+
+
             train_loss, train_recon, train_kld = self.train_one_epoch(epoch)
             
             # Evaluate on validation set

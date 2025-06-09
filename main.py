@@ -1,9 +1,9 @@
-from nn_ops import MNISTBatchGenerator, VAE, NN, VAE_old, Tensor, ModelSaver, Train, load_dataset 
+from nn_ops import MNISTBatchGenerator, VAE, NN, ModelSaver, Train, load_dataset 
 import time
 import argparse
 import json
 
-def create_model_from_config(config):
+def create_model_from_config(config, cvae):
     """
     Create a model instance based on configuration dictionary.
     
@@ -11,7 +11,7 @@ def create_model_from_config(config):
         config: Dictionary containing model configuration
         
     Returns:
-        Model instance (VAE, NN, or VAE_old)
+        Model instance (VAE or NN)
     """
     model_type = config.get('model_type')
     
@@ -25,15 +25,10 @@ def create_model_from_config(config):
             decoder_activations=config.get('decoder_activations'),
             encoder_dropout_rates=config.get('encoder_dropout_rates'),
             decoder_dropout_rates=config.get('decoder_dropout_rates'),
-            init_method=config.get('init_method', 'he')
+            init_method=config.get('init_method', 'he'),
+            cvae=cvae
         )
-    elif model_type == 'VAE_old':
-        return VAE_old(
-            input_dim=config['input_dim'],
-            hidden_dim=config['hidden_dim'],
-            latent_dim=config['latent_dim'],
-            init_method=config.get('init_method', 'he')
-        )
+
     elif model_type == 'NN':
         return NN(
             nin=config['nin'],
@@ -100,7 +95,7 @@ def train_model(model_config, training_config, model_name=None):
     print("="*60)
     print("TRAINING CONFIGURATION")
     print("="*60)
-    print(f"Model Type: {model_config.get('model_type')}")
+    print(f"Model Type: {model_config.get('model_type')}, CVAE Training: {training_config['cvae']}")
     print(f"Epochs: {training_config['num_epochs']}")
     print(f"Batch Size: {training_config['batch_size']}")
     print(f"Learning Rate: {training_config['learning_rate']}")
@@ -109,12 +104,12 @@ def train_model(model_config, training_config, model_name=None):
     
     # Load data
     train_loader, test_loader = load_dataset(batch_size=training_config['batch_size'], dataset_name=training_config['dataset']) 
-    train_generator = MNISTBatchGenerator(train_loader)
-    test_generator = MNISTBatchGenerator(test_loader)
+    train_generator = MNISTBatchGenerator(train_loader, cvae=training_config['cvae'])
+    test_generator = MNISTBatchGenerator(test_loader, cvae=training_config['cvae'])
     print(f"Successfully loaded the {training_config['dataset']} dataset.") 
     # Create model
     print("Creating model...")
-    model = create_model_from_config(model_config)
+    model = create_model_from_config(model_config, cvae=training_config['cvae'])
     print(f"Model created: {type(model).__name__}")
     
     # Initialize trainer
@@ -127,7 +122,7 @@ def train_model(model_config, training_config, model_name=None):
         learning_rate=training_config['learning_rate'],
         batch_size=training_config['batch_size'],
         early_stopping_patience=training_config.get('early_stopping_patience', 15),
-        
+        train_cvae=training_config['cvae']
     )
     
     # Train the model
@@ -140,13 +135,14 @@ def train_model(model_config, training_config, model_name=None):
     print(f"Training completed in {training_time:.2f} seconds")
     
     # Save the model
-    if model_name is None:
-        model_name = f"{model_config.get('model_type', 'model').lower()}_trained"
+    # if model_name is None:
+    #     model_name = f"{model_config.get('model_type', 'model').lower()}_trained"
     
     print("Saving model...")
     saver = ModelSaver(
         model=trainer.model,
         model_name=model_name,
+        cvae=training_config['cvae'],
         include_history={
             "epochs": training_config['num_epochs'],
             "batch_size": training_config['batch_size'],
@@ -162,7 +158,7 @@ def main():
     """Main training function with command line interface."""
     parser = argparse.ArgumentParser(description='Train neural network models')
     parser.add_argument('--config', type=str, help='Path to model configuration JSON file')
-    parser.add_argument('--model-type', type=str, choices=['VAE', 'NN', 'VAE_old'], 
+    parser.add_argument('--model-type', type=str, choices=['VAE', 'NN'], 
                        default='VAE', help='Type of model to train (if no config file)')
     parser.add_argument('--dataset', type=str, default='mnist', help='Specify the dataset to train')
     parser.add_argument('--epochs', type=int, default=50, help='Number of training epochs')
@@ -170,6 +166,7 @@ def main():
     parser.add_argument('--learning-rate', type=float, default=0.001, help='Learning rate')
     parser.add_argument('--model-name', type=str, help='Name for saving the trained model')
     parser.add_argument('--list-models', action='store_true', help='List all saved models')
+    parser.add_argument('--cvae', type=bool, default=False, choices=[True, False], help='Set true to train a Conditional VAE')
     
     args = parser.parse_args()
     
@@ -198,21 +195,15 @@ def main():
             model_config = get_default_vae_config()
         elif args.model_type == 'NN':
             model_config = get_default_nn_config()
-        elif args.model_type == 'VAE_old':
-            model_config = {
-                "model_type": "VAE_old",
-                "input_dim": 784,
-                "hidden_dim": 256,
-                "latent_dim": 20,
-                "init_method": "he"
-            }
+
     
     # Training configuration
     training_config = {
         'num_epochs': args.epochs,
         'batch_size': args.batch_size,
         'learning_rate': args.learning_rate,
-        'dataset': args.dataset 
+        'dataset': args.dataset,
+        'cvae': args.cvae 
     }
     
     # Train the model
@@ -230,7 +221,7 @@ def main():
         print(f"Model type: {model_config.get('model_type')}")
         
         # Additional info for VAE models
-        if model_config.get('model_type') in ['VAE', 'VAE_old']:
+        if model_config.get('model_type') in ['VAE']:
             print(f"\nTo generate digits with this VAE model, run:")
             print(f"python generate_digits.py --model-path '{saved_path}'")
         
