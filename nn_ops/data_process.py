@@ -15,7 +15,7 @@ DATASET_CONFIG = {
     }
 }
 
-def load_dataset(dataset_name='mnist', batch_size=64, data_path='./data'):
+def load_dataset(dataset_name='mnist', batch_size=64, data_path='../data_and_models/data'):
     """
     Load and preprocess a specified dataset (MNIST or FashionMNIST) using PyTorch.
 
