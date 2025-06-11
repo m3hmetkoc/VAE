@@ -131,6 +131,30 @@ class Tensor:
         def _backward(): self.grad += (self.data > 0).astype(np.float32) * out.grad
         out._backward = _backward
         return out
+    
+    def softmax(self):
+        shifted_data = self.data - np.max(self.data, axis=1, keepdims=True)
+        exp_data = np.exp(shifted_data)
+        softmax_data = exp_data / np.sum(exp_data, axis=1, keepdims=True)
+        out = Tensor(softmax_data)
+        out._prev = [self] 
+        out._op = 'softmax' 
+        def _backward():
+            if self.requires_grad:
+                batch_size = self.data.shape[0]
+                n_classes = self.data.shape[1]
+                dx = np.zeros_like(self.data)
+                for i in range(batch_size):
+                    s = softmax_data[i]
+                    for k in range(n_classes):
+                        for j in range(n_classes):
+                            if k == j:
+                                dx[i, k] += s[k] * (1 - s[k]) * out.grad[i, k]
+                            else:
+                                dx[i, k] += -s[k] * s[j] * out.grad[i, j]
+                self.grad += dx
+        out._backward = _backward
+        return out
 
     def __pow__(self, power):
         assert isinstance(power, (int, float)), "only supports int/float powers"
@@ -202,3 +226,9 @@ def kl_divergence(mu: Tensor, logvar: Tensor) -> Tensor:
     """
     kld = (-0.5 * (1 + logvar - mu**2 - logvar.exp())).sum()
     return kld / mu.data.shape[0]
+
+def cross_entropy_loss(y_pred: Tensor, y_true: Tensor, eps = 1e-12) -> Tensor:
+    y_pred_clamped = y_pred.clip(eps, 1. - eps)
+    loss = -(y_true * y_pred_clamped.log()).sum()
+    batch_size = y_pred.data.shape[0]
+    return loss / batch_size

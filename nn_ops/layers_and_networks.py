@@ -146,6 +146,7 @@ class NN:
         self.activations = activations
         self.dropout_rates = dropout_rates
         self.init_method = init_method
+        self.model_type = 'NN'
         
         self.layers = [
             Layer(
@@ -158,7 +159,7 @@ class NN:
             for i in range(len(nouts))
         ]
 
-    def __call__(self, x):
+    def forward(self, x):
         for layer in self.layers:
             x = layer(x)
         return x
@@ -383,7 +384,8 @@ class VAE:
                  encoder_dropout_rates: list = None, decoder_dropout_rates: list = None,
                  init_method='he',
                  cvae=False,
-                 model_type="VAE"):
+                 model_type="VAE"
+                 ):
         """
         Flexible VAE with configurable encoder and decoder architectures
         
@@ -400,16 +402,16 @@ class VAE:
             
         Examples:
             # Simple VAE (like original)
-            vae = FlexibleVAE(input_dim=784, latent_dim=20, 
+            vae = VAE(input_dim=784, latent_dim=20, 
                             encoder_hidden_dims=[256], decoder_hidden_dims=[256])
             
             # Deep VAE
-            vae = FlexibleVAE(input_dim=784, latent_dim=20,
+            vae = VAE(input_dim=784, latent_dim=20,
                             encoder_hidden_dims=[512, 256, 128],
                             decoder_hidden_dims=[128, 256, 512])
             
             # VAE with custom activations and dropout
-            vae = FlexibleVAE(input_dim=784, latent_dim=20,
+            vae = VAE(input_dim=784, latent_dim=20,
                             encoder_hidden_dims=[512, 256],
                             decoder_hidden_dims=[256, 512],
                             encoder_activations=['relu', 'relu'],

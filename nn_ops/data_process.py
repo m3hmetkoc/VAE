@@ -85,6 +85,46 @@ def load_dataset(dataset_name='mnist', batch_size=64, data_path='./data'):
     )
     return train_loader, test_loader
 
+def load_random_test_samples(dataset_name='mnist', num_samples=16, data_path='./data'):
+    """
+    Load a random subset of test samples from the specified dataset.
+    
+    Args:
+        dataset_name (str): The name of the dataset to load ('mnist' or 'fashion_mnist').
+        num_samples (int): Number of random samples to return.
+        data_path (str): The root directory where the dataset is stored.
+    
+    Returns:
+        tuple: (images_tensor, labels_tensor) where:
+            - images_tensor: Tensor object with flattened image data (num_samples, 784)
+            - labels_tensor: Tensor object with one-hot encoded labels (num_samples, 10)
+    """
+    # Load the full test dataset
+    _, test_loader = load_dataset(dataset_name=dataset_name, batch_size=128, data_path=data_path)
+    print("???")
+    # Get all test data
+    all_images, all_labels = next(iter(test_loader))
+    
+    # Randomly select indices
+    total_samples = all_images.shape[0]
+    if num_samples > total_samples:
+        print(f"Warning: Requested {num_samples} samples, but only {total_samples} available. Using all samples.")
+        num_samples = total_samples
+    
+    random_indices = torch.randperm(total_samples)[:num_samples]
+    
+    # Select random samples
+    selected_images = all_images[random_indices]
+    selected_labels = all_labels[random_indices]
+    
+    # Reshape images to (batch_size, 784) and convert labels to one-hot
+    selected_images = selected_images.view(selected_images.shape[0], -1)
+    labels_one_hot = torch.zeros(selected_labels.size(0), 10)
+    labels_one_hot.scatter_(1, selected_labels.unsqueeze(1), 1)
+    
+    # Convert to Tensor objects
+    return Tensor(selected_images.numpy(), requires_grad=False), Tensor(labels_one_hot.numpy(), requires_grad=False)
+
 
 class MNISTBatchGenerator:
     def __init__(self, data_loader):

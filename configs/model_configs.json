@@ -1,0 +1,52 @@
+{
+  "simple_vae": {
+    "model_type": "VAE",
+    "input_dim": 784,
+    "latent_dim": 20,
+    "encoder_hidden_dims": [256],
+    "decoder_hidden_dims": [256],
+    "init_method": "he"
+  },
+  
+  "deep_vae": {
+    "model_type": "VAE",
+    "input_dim": 784,
+    "latent_dim": 32,
+    "encoder_hidden_dims": [512, 256, 128],
+    "decoder_hidden_dims": [128, 256, 512],
+    "encoder_activations": ["relu", "relu", "relu"],
+    "decoder_activations": ["relu", "relu", "sigmoid"],
+    "encoder_dropout_rates": [0.2, 0.3, 0.2],
+    "decoder_dropout_rates": [0.2, 0.3, 0.0],
+    "init_method": "he"
+  },
+  
+  "wide_vae": {
+    "model_type": "VAE",
+    "input_dim": 784,
+    "latent_dim": 50,
+    "encoder_hidden_dims": [1024, 512],
+    "decoder_hidden_dims": [512, 1024],
+    "encoder_dropout_rates": [0.1, 0.2],
+    "decoder_dropout_rates": [0.2, 0.1],
+    "init_method": "xavier"
+  },
+  
+  "classifier_nn": {
+    "model_type": "NN",
+    "nin": 784,
+    "nouts": [256, 128, 64, 10],
+    "activations": ["relu", "relu", "relu", "softmax"],
+    "dropout_rates": [0.2, 0.3, 0.4, 0.0],
+    "init_method": "he"
+  },
+  
+  "simple_classifier": {
+    "model_type": "NN",
+    "nin": 784,
+    "nouts": [128, 10],
+    "activations": ["relu", "softmax"],
+    "dropout_rates": [0.5, 0.0],
+    "init_method": "xavier"
+  }
+}
