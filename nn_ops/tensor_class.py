@@ -98,6 +98,31 @@ class Tensor:
             out._prev = {self}
         
         return out
+    
+    def concatenate_tensors(self, other):
+        """
+        Properly concatenate tensors while maintaining gradient flow
+        """
+        # Concatenate the data
+        concatenated_data = np.concatenate([self.data, other.data], axis=1)
+        
+        # Create new tensor with proper gradient tracking
+        concatenated = Tensor(concatenated_data, requires_grad=self.requires_grad or other.requires_grad)
+        
+        # Set up gradient computation
+        if self.requires_grad or other.requires_grad:
+            concatenated._prev = [self, other]
+            concatenated._op = 'concatenate'
+            
+            def _backward():
+                if self.requires_grad:
+                    self.grad += concatenated.grad[:, :self.data.shape[1]]
+                if other.requires_grad:
+                    other.grad += concatenated.grad[:, other.data.shape[1]:]
+            
+            concatenated._backward = _backward
+        
+        return concatenated
 
     # --- Activations and elementwise ---
     def log(self):
