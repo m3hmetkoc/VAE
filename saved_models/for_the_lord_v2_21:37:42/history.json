@@ -1,0 +1,8 @@
+{
+    "epochs": 10,
+    "batch_size": 64,
+    "learning_rate": 0.001,
+    "training_time": 129.00349068641663,
+    "dataset": "mnist",
+    "model_type": "VAE"
+}
