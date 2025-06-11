@@ -25,7 +25,7 @@ def convert_to_json_serializable(item):
     return item
 
 class ModelSaver:
-    def __init__(self, model, model_name=None, include_history=None, base_path='saved_models', cvae=False):
+    def __init__(self, model, model_name=None, include_history=None, base_path='../data_and_models/saved_models', cvae=False):
         """
         Initialize ModelSaver with a base directory for saved models
         """
@@ -160,7 +160,7 @@ class ModelSaver:
         return loaded_model, history
 
     @staticmethod
-    def list_saved_models(base_path='saved_models'):
+    def list_saved_models(base_path='../data_and_models/saved_models'):
         """
         List all saved models with their details.
         """

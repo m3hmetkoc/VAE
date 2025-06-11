@@ -223,7 +223,7 @@ class VAETrainer(BaseTrainer):
             'Loss': f'{metrics["total_loss"].data:.4f}',
             'Recon': f'{metrics["recon_loss"].data:.4f}',
             'KLD': f'{metrics["kld_loss"].data:.4f}',
-            'Beta': f'{metrics['beta']:.3f}'
+            'Beta': f'{metrics["beta"]:.3f}'
         }
     
     def _get_history_keys(self):
@@ -256,7 +256,7 @@ class VAETrainer(BaseTrainer):
               f'(Recon: {val_metrics["recon_loss"]:.4f}, KLD: {val_metrics["kld_loss"]:.4f})')
         print(f'Learning Rate: {lr:.6f}')
     
-    def _generate_sample(self, epoch, save_path="generated_imgs_on_training"):
+    def _generate_sample(self, epoch, save_path="../data_and_models/generated_imgs_on_training"):
         """Generate and save a sample image during training"""
         try:
             import os

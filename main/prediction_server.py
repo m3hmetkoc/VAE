@@ -1,9 +1,7 @@
-#!/usr/bin/env python3
 """
 Flask server for MNIST digit prediction.
 Loads the trained model and provides API endpoints for real-time predictions.
 """
-
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import numpy as np
@@ -12,9 +10,16 @@ import os
 import sys
 
 # Add VAE directory to path
-sys.path.append('./VAE')
+current_script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Go up one level to reach project_root/
+project_root = os.path.join(current_script_dir, '..')
+
+# Add project_root to sys.path
+sys.path.append(project_root)
+
 from nn_ops import ModelSaver
-from test import predict_digit
+from predict_digits import predict_digit
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React frontend

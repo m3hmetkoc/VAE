@@ -1,7 +1,19 @@
-from nn_ops import MNISTBatchGenerator, VAE, NN, ModelSaver, load_dataset, create_trainer
 import time
 import argparse
 import json
+import sys
+import os
+
+# Get the directory of the current script 
+current_script_dir = os.path.dirname(os.path.abspath(__file__))
+
+# Go up one level to reach project_root/
+project_root = os.path.join(current_script_dir, '..')
+
+# Add project_root to sys.path
+sys.path.append(project_root)
+
+from nn_ops import MNISTBatchGenerator, VAE, NN, ModelSaver, load_dataset, create_trainer
 
 def create_model_from_config(config, cvae):
     """
@@ -315,7 +327,7 @@ def main():
         # Additional info for VAE models
         if model_config.get('model_type') == 'VAE':
             print(f"\nTo generate digits with this VAE model, run:")
-            print(f"python test.py --model-path '{saved_path}'")
+            print(f"python generate_images.py --model-path '{saved_path}'")
         
         # Plot training history if requested
         plot_choice = input("\nWould you like to plot the training history? (y/n): ").lower()
