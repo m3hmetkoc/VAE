@@ -273,6 +273,53 @@ def interpolate_in_latent_space(vae_model, latent_dim, num_steps=10, save_path=N
     
     plt.show()
 
+def predict_digit(nn_model, canvas_data):
+    """
+    Predict a digit from canvas data using a trained NN classifier.
+    
+    Args:
+        nn_model: The trained NN classifier model.
+        canvas_data: NumPy array of pixel values (784 elements, 0-255 range) or 2D array (28x28).
+    
+    Returns:
+        Dictionary containing prediction results:
+        - predicted_digit: The predicted digit (0-9)
+        - confidence: Confidence score for the prediction
+        - probabilities: Array of probabilities for each digit (0-9)
+    """
+    # Ensure canvas_data is in the right format
+    if isinstance(canvas_data, list):
+        canvas_data = np.array(canvas_data, dtype=np.float32)
+    
+    # If 2D array, flatten it
+    if canvas_data.ndim == 2:
+        canvas_data = canvas_data.flatten()
+    
+    # Ensure we have exactly 784 pixels
+    if canvas_data.shape[0] != 784:
+        raise ValueError(f"Expected 784 pixels, got {canvas_data.shape[0]}")
+    
+    # Normalize pixel values to [0, 1] range
+    canvas_data = canvas_data.astype(np.float32) / 255.0
+    
+    # Reshape for model input (add batch dimension)
+    input_tensor = Tensor(canvas_data.reshape(1, 784), requires_grad=False)
+    
+    # Set model to evaluation mode and make prediction
+    nn_model.eval()
+    predictions_tensor = nn_model.forward(input_tensor)
+    probabilities = predictions_tensor.data[0]  # Remove batch dimension
+    
+    # Get predicted digit and confidence
+    predicted_digit = int(np.argmax(probabilities))
+    confidence = float(probabilities[predicted_digit])
+    
+    return {
+        'predicted_digit': predicted_digit,
+        'confidence': confidence,
+        'probabilities': probabilities.tolist()
+    }
+
 def main():
     """Main function with command line interface for digit generation and classification testing."""
     parser = argparse.ArgumentParser(description='Generate digits using trained VAE/CVAE models or test NN classifiers')
