@@ -7,13 +7,14 @@ Loads the trained model and provides API endpoints for real-time predictions.
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import numpy as np
+import argparse
 import os
 import sys
 
 # Add VAE directory to path
 sys.path.append('./VAE')
 from nn_ops import ModelSaver
-from VAE.test import predict_digit
+from test import predict_digit
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React frontend
@@ -21,10 +22,9 @@ CORS(app)  # Enable CORS for React frontend
 # Global model variable
 model = None
 
-def load_model():
+def load_model(model_path):
     """Load the trained MNIST classifier model."""
     global model
-    model_path = './VAE/saved_models/yusuf_21:49:46'
     
     if not os.path.exists(model_path):
         raise FileNotFoundError(f"Model not found at {model_path}")
@@ -112,8 +112,11 @@ def model_info():
 
 if __name__ == '__main__':
     try:
-        print("Loading MNIST classifier model...")
-        model = load_model()
+        parser = argparse.ArgumentParser(description='Train neural network models')
+        parser.add_argument('--model-path', type=str, required=True,
+                       help='Path to the saved VAE/CVAE/NN model directory')
+        args = parser.parse_args() 
+        model = load_model(args.model_path)
         print("Starting Flask server...")
         app.run(host='127.0.0.1', port=5000, debug=True)
     except Exception as e:
