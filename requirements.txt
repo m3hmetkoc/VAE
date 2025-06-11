@@ -1,0 +1,7 @@
+Flask
+Flask-CORS
+numpy
+torch
+torchvision
+matplotlib
+tqdm
