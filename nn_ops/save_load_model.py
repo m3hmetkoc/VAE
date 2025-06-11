@@ -160,7 +160,7 @@ class ModelSaver:
         return loaded_model, history
 
     @staticmethod
-    def list_saved_models(base_path='../saved_models'):
+    def list_saved_models(base_path='saved_models'):
         """
         List all saved models with their details.
         """

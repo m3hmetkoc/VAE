@@ -3,4 +3,4 @@ from .optimizer import Adam, Adamax, SGD, get_optimizer
 from .tensor_class import Tensor, reparameterize
 from .layers_and_networks import VAE, NN
 from .save_load_model import ModelSaver
-from .trainer_v2 import create_trainer
+from .trainer import create_trainer

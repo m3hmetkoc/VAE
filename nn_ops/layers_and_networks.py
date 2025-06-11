@@ -459,7 +459,7 @@ class VAE:
         """
         if self.cvae and labels is not None:
             # Concatenate input with labels for encoder
-            x_conditioned = self.concatenate_tensors(x, labels)
+            x_conditioned = x.concatenate_tensors(labels)
             mu, logvar = self.encoder(x_conditioned)
         else:
             mu, logvar = self.encoder(x)
@@ -469,37 +469,12 @@ class VAE:
         
         if self.cvae and labels is not None:
             # Concatenate z with labels for decoder - FIXED VERSION
-            z_conditioned = self.concatenate_tensors(z, labels)
+            z_conditioned = z.concatenate_tensors(labels)
             reconstructed = self.decoder(z_conditioned)
         else:
             reconstructed = self.decoder(z)
             
         return reconstructed, mu, logvar
-    
-    def concatenate_tensors(self, tensor1, tensor2):
-        """
-        Properly concatenate tensors while maintaining gradient flow
-        """
-        # Concatenate the data
-        concatenated_data = np.concatenate([tensor1.data, tensor2.data], axis=1)
-        
-        # Create new tensor with proper gradient tracking
-        concatenated = Tensor(concatenated_data, requires_grad=tensor1.requires_grad or tensor2.requires_grad)
-        
-        # Set up gradient computation
-        if tensor1.requires_grad or tensor2.requires_grad:
-            concatenated._prev = [tensor1, tensor2]
-            concatenated._op = 'concatenate'
-            
-            def _backward():
-                if tensor1.requires_grad:
-                    tensor1.grad += concatenated.grad[:, :tensor1.data.shape[1]]
-                if tensor2.requires_grad:
-                    tensor2.grad += concatenated.grad[:, tensor1.data.shape[1]:]
-            
-            concatenated._backward = _backward
-        
-        return concatenated
     
     def parameters(self):
         params = []
