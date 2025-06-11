@@ -453,14 +453,54 @@ class VAE:
             cvae=self.cvae
         )
 
-    def forward(self, x, labels):
-        mu, logvar = self.encoder(x)
+    def forward(self, x, labels=None):
+        """
+        Fixed forward pass for CVAE
+        """
+        if self.cvae and labels is not None:
+            # Concatenate input with labels for encoder
+            x_conditioned = self.concatenate_tensors(x, labels)
+            mu, logvar = self.encoder(x_conditioned)
+        else:
+            mu, logvar = self.encoder(x)
+        
+        # Reparameterize to get z
         z = reparameterize(mu, logvar)
-        if self.cvae:
-            z = Tensor(np.concatenate([z.data, labels.data], axis=1))
-        reconstructed = self.decoder(z)
+        
+        if self.cvae and labels is not None:
+            # Concatenate z with labels for decoder - FIXED VERSION
+            z_conditioned = self.concatenate_tensors(z, labels)
+            reconstructed = self.decoder(z_conditioned)
+        else:
+            reconstructed = self.decoder(z)
+            
         return reconstructed, mu, logvar
-
+    
+    def concatenate_tensors(self, tensor1, tensor2):
+        """
+        Properly concatenate tensors while maintaining gradient flow
+        """
+        # Concatenate the data
+        concatenated_data = np.concatenate([tensor1.data, tensor2.data], axis=1)
+        
+        # Create new tensor with proper gradient tracking
+        concatenated = Tensor(concatenated_data, requires_grad=tensor1.requires_grad or tensor2.requires_grad)
+        
+        # Set up gradient computation
+        if tensor1.requires_grad or tensor2.requires_grad:
+            concatenated._prev = [tensor1, tensor2]
+            concatenated._op = 'concatenate'
+            
+            def _backward():
+                if tensor1.requires_grad:
+                    tensor1.grad += concatenated.grad[:, :tensor1.data.shape[1]]
+                if tensor2.requires_grad:
+                    tensor2.grad += concatenated.grad[:, tensor1.data.shape[1]:]
+            
+            concatenated._backward = _backward
+        
+        return concatenated
+    
     def parameters(self):
         params = []
         params.extend(self.encoder.parameters())

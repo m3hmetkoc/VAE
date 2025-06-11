@@ -315,7 +315,7 @@ def main():
         # Additional info for VAE models
         if model_config.get('model_type') == 'VAE':
             print(f"\nTo generate digits with this VAE model, run:")
-            print(f"python generate_digits.py --model-path '{saved_path}'")
+            print(f"python test.py --model-path '{saved_path}'")
         
         # Plot training history if requested
         plot_choice = input("\nWould you like to plot the training history? (y/n): ").lower()

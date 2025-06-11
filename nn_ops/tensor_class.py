@@ -228,6 +228,9 @@ def kl_divergence(mu: Tensor, logvar: Tensor) -> Tensor:
     return kld / mu.data.shape[0]
 
 def cross_entropy_loss(y_pred: Tensor, y_true: Tensor, eps = 1e-12) -> Tensor:
+    """
+    Cross Entropy loss: -(y_true)*log(y_pred)].sum()
+    """
     y_pred_clamped = y_pred.clip(eps, 1. - eps)
     loss = -(y_true * y_pred_clamped.log()).sum()
     batch_size = y_pred.data.shape[0]

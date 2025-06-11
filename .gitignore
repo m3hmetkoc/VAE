@@ -1,5 +1,7 @@
 data/
-images/
+generated_imgs_on_training/
 nn_ops/__pycache__
-nn_ops/trainer_ops
 saved_models/ 
+images/
+nn_ops/trainer_ops/
+

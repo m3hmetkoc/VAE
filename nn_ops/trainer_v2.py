@@ -86,6 +86,8 @@ class BaseTrainer:
                 for key, value in batch_metrics.items():
                     if hasattr(value, 'data'):
                         metrics[key] += value.data
+                    else:
+                        metrics[key] += value 
 
                 # Update progress bar
                 pbar.set_postfix(self._format_progress_metrics(batch_metrics))
@@ -186,11 +188,8 @@ class VAETrainer(BaseTrainer):
     def process_batch(self, X_batch, labels, is_training=True, epoch=0):
         """Process one batch for VAE/CVAE training"""
         # Prepare input based on model type
-        if self.train_cvae:
-            X_concat = Tensor(np.concatenate([X_batch.data, labels.data], axis=1), requires_grad=False)
-            reconstructed_x, mu, logvar = self.model.forward(X_concat, labels)
-        else:
-            reconstructed_x, mu, logvar = self.model.forward(X_batch, labels)
+        
+        reconstructed_x, mu, logvar = self.model.forward(X_batch, labels)
         
         # Calculate losses
         recon_loss = binary_cross_entropy(recon_x=reconstructed_x, x=X_batch)
