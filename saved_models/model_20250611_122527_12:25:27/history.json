@@ -1,8 +1,0 @@
-{
-    "epochs": 5,
-    "batch_size": 64,
-    "learning_rate": 0.001,
-    "training_time": 37.331438064575195,
-    "dataset": "mnist",
-    "model_type": "NN"
-}

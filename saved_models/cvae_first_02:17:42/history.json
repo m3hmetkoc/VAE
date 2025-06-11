@@ -1,6 +1,0 @@
-{
-    "epochs": 10,
-    "batch_size": 64,
-    "learning_rate": 0.009,
-    "training_time": 129.14205193519592
-}
