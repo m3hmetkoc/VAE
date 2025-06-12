@@ -1,0 +1,258 @@
+.canvas-view {
+  padding: 25px 50px;
+  background-color: #181818;
+  height: 100vh;
+  box-sizing: border-box;
+  margin-left: 20px;
+  width: calc(100% - 20px);
+  max-width: calc(100vw - 270px);
+  overflow-x: hidden;
+  overflow-y: hidden; /* Prevent vertical scrollbar */
+}
+
+.view-header {
+  margin-bottom: 18px;
+}
+
+.view-header h1 {
+  color: #FFFFFF;
+  margin-bottom: 6px;
+  font-size: 2.2rem;
+  font-weight: 600;
+}
+
+.view-header p {
+  color: #AAAAAA;
+  font-size: 1rem;
+  line-height: 1.3;
+}
+
+.main-container {
+  gap: 25px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-height: calc(100vh - 120px); /* Limit height to prevent overflow */
+  overflow-y: auto; /* Allow scrolling only within the container if needed */
+}
+
+.canvas-container {
+  border: 1px solid #383838;
+}
+
+.auto-prediction-info {
+  background-color: transparent;
+  border: none;
+}
+
+.auto-prediction-info p {
+  color: #AAAAAA;
+  font-style: italic;
+}
+
+.control-button {
+  background-color: #383838;
+  color: #FFFFFF;
+}
+
+.control-button:hover:not(:disabled) {
+  background-color: #4d4d4d;
+}
+
+.control-button:active {
+  transform: translateY(0);
+}
+
+.control-button:disabled {
+  background-color: #666;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.predict-button {
+  background-color: #28A745;
+}
+
+.predict-button:hover:not(:disabled) {
+  background-color: #218838;
+}
+
+.prediction-section {
+  max-width: 400px;
+  min-width: 350px;
+  text-align: left;
+}
+
+.error-message {
+  background-color: rgba(255, 70, 70, 0.1);
+  border: 1px solid rgba(255, 70, 70, 0.3);
+}
+
+.error-message h3 {
+  color: #FF4646;
+}
+
+.error-message p {
+  color: #AAAAAA;
+}
+
+.error-hint {
+  background-color: #212121;
+}
+
+.error-hint code {
+  color: #FF4646;
+}
+
+.prediction-results {
+  background-color: #212121;
+  border: 1px solid #383838;
+}
+
+.prediction-header {
+  margin-bottom: 20px;
+}
+
+.prediction-header h3 {
+  margin: 0 0 15px 0;
+  color: #3DA6FF;
+}
+
+.main-prediction {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 10px;
+}
+
+.predicted-digit {
+  color: #3DA6FF;
+  background-color: rgba(61, 166, 255, 0.1);
+  border: 1px solid rgba(61, 166, 255, 0.3);
+}
+
+.confidence {
+  color: #AAAAAA;
+}
+
+.probability-chart h4 {
+  margin: 20px 0 15px 0;
+  color: #AAAAAA;
+}
+
+.probability-bar {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+  gap: 10px;
+}
+
+.digit-label {
+  color: #AAAAAA;
+}
+
+.bar-container {
+  background-color: #383838;
+}
+
+.bar {
+  background-color: #5a5a5a;
+}
+
+.bar-max {
+  background-color: #3DA6FF;
+}
+
+.probability-value {
+  color: #AAAAAA;
+}
+
+.placeholder {
+  background-color: #212121;
+  border: 1px dashed #383838;
+}
+
+.placeholder h3 {
+  color: #AAAAAA;
+}
+
+.placeholder p {
+  color: #717171;
+}
+
+.info {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #FFFFFF;
+  border: 1px solid #DEE2E6;
+  border-radius: 8px;
+  max-width: 90%;
+  text-align: center;
+}
+
+.info p {
+  margin: 8px 0;
+  font-size: 0.9rem;
+  color: #6C757D;
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .canvas-view {
+    padding: 20px 35px;
+    margin-left: 15px;
+  }
+  
+  .main-container {
+    max-height: calc(100vh - 110px);
+  }
+}
+
+@media (max-width: 1024px) {
+  .main-container {
+    flex-direction: column;
+    align-items: center;
+    max-height: calc(100vh - 100px);
+  }
+  
+  .prediction-section {
+    max-width: 500px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .canvas-view {
+    padding: 15px 25px;
+    margin-left: 10px;
+  }
+  
+  .view-header h1 {
+    font-size: 1.8rem;
+  }
+  
+  .main-container {
+    gap: 20px;
+    max-height: calc(100vh - 90px);
+  }
+  
+  .controls {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .control-button {
+    width: 200px;
+  }
+  
+  .prediction-section {
+    min-width: 300px;
+  }
+  
+  .main-prediction {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+} 

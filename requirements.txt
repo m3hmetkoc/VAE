@@ -1,7 +1,8 @@
 Flask
-Flask-CORS
+Flask-Cors
 numpy
 torch
 torchvision
 matplotlib
+Pillow
 tqdm

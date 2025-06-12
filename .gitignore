@@ -4,6 +4,10 @@ data_and_models/saved_models
 __pycache__/
 nn_ops/__pycache__
 .venv/
+venv/
+/venv
+/saved_models
 main/__pycache__
 digit-guess-web/node_modules/
 .DS_Store
+digit-guess-web/public/ank_uni_logo.png
