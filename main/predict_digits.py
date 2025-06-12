@@ -5,7 +5,6 @@ import os
 import sys 
 
 current_script_dir = os.path.dirname(os.path.abspath(__file__))
-
 # Go up one level to reach project_root/
 project_root = os.path.join(current_script_dir, '..')
 
@@ -220,7 +219,7 @@ def main():
         loaded_model, history = ModelSaver.load_model(args.model_path)
         
         model_type = loaded_model.model_type
-        if model_type is not "NN":
+        if model_type != "NN":
             print(f"Error: This script supports VAE, CVAE, or NN models. Loaded model type: {model_type}")
             return 1
 

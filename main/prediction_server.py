@@ -18,14 +18,18 @@ project_root = os.path.join(current_script_dir, '..')
 # Add project_root to sys.path
 sys.path.append(project_root)
 
-from nn_ops import ModelSaver
+from nn_ops import ModelSaver, Tensor
 from predict_digits import predict_digit
+from generate_images import generate_image, generate_specific_images_with_label
+from utils import numpy_to_base64
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for React frontend
 
 # Global model variable
 model = None
+# Cache for loaded generator models
+generator_models_cache = {}
 
 def load_model(model_path):
     """Load the trained MNIST classifier model."""
@@ -43,6 +47,62 @@ def load_model(model_path):
     except Exception as e:
         print(f"Error loading model: {e}")
         raise
+
+@app.route('/models', methods=['GET'])
+def list_models():
+    """List all available VAE/CVAE models."""
+    try:
+        models = ModelSaver.list_saved_models()
+        # Filter for only generative models
+        gen_models = [m for m in models if m['type'] in ['VAE', 'CVAE']]
+        return jsonify(gen_models)
+    except Exception as e:
+        print(f"Error listing models: {e}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/generate', methods=['POST'])
+def generate():
+    """Generate digits using a selected VAE/CVAE model."""
+    try:
+        data = request.get_json()
+        model_path = data.get('model_path')
+        num_samples = data.get('num_samples', 9)
+        label = data.get('label')  # Can be None for unconditional or VAE
+
+        if not model_path:
+            return jsonify({'error': 'model_path is required'}), 400
+
+        # Use a simple cache for generator models
+        if model_path in generator_models_cache:
+            gen_model = generator_models_cache[model_path]
+        else:
+            gen_model, _ = ModelSaver.load_model(model_path)
+            generator_models_cache[model_path] = gen_model
+        
+        config = gen_model.get_config()
+        latent_dim = config['latent_dim']
+        model_type = config.get('model_type')
+
+        if model_type not in ['VAE', 'CVAE']:
+            return jsonify({'error': 'Selected model is not a generative model (VAE/CVAE)'}), 400
+
+        images_data = None
+        if label is not None and model_type == 'CVAE':
+            images_data = generate_specific_images_with_label(
+                gen_model, int(label), num_samples, latent_dim, num_classes=10
+            )
+        else:
+            images_data = generate_image(gen_model, num_samples, latent_dim)
+
+        base64_images = [numpy_to_base64(img.reshape(28, 28)) for img in images_data]
+        
+        return jsonify({'images': base64_images})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        print(f"Generation error: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/health', methods=['GET'])
 def health_check():

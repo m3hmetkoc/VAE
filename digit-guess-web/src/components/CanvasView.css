@@ -1,38 +1,24 @@
-.App {
-  display: flex;
-  min-height: 100vh;
-  background-color: #282c34;
-  color: white;
-}
-
-.main-content {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.canvas-view {
+  padding: 40px;
+  width: 100%;
   overflow-y: auto;
-  height: 100vh;
-}
-
-.App-header {
-  background-color: #282c34;
-  padding: 20px;
-  color: white;
-  min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
 }
 
-.App-header h1 {
+.view-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.view-header h1 {
   margin-bottom: 10px;
   font-size: 2.5rem;
 }
 
-.App-header p {
-  margin-bottom: 30px;
+.view-header p {
+  margin-bottom: 20px;
   font-size: 1.2rem;
   color: #aaa;
 }
@@ -52,16 +38,16 @@
 }
 
 .canvas-container {
-  margin: 20px 0;
+  margin-bottom: 20px;
   display: inline-block;
-  padding: 10px;
-  background-color: #fff;
+  background-color: #000;
+  border: 2px solid #ccc;
   border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
 .controls {
-  margin: 20px 0;
+  margin-bottom: 20px;
   display: flex;
   gap: 15px;
   justify-content: center;
@@ -269,6 +255,7 @@
   background-color: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   max-width: 800px;
+  text-align: center;
 }
 
 .info p {
@@ -291,20 +278,11 @@
 }
 
 @media (max-width: 768px) {
-  .App {
-    flex-direction: column;
-  }
-  
-  .main-content {
-    height: auto;
-  }
-  
-  .App-header {
+  .canvas-view {
     padding: 15px;
-    font-size: calc(8px + 2vmin);
   }
   
-  .App-header h1 {
+  .view-header h1 {
     font-size: 2rem;
   }
   
