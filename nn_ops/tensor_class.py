@@ -222,6 +222,116 @@ class Tensor:
         self.grad = np.ones_like(self.data)
         for node in reversed(topo): node._backward()
 
+    def conv2d(self, weight: "Tensor", bias: "Tensor" = None, stride: int = 1, padding: int = 0) -> "Tensor":
+        """
+        2-D convolution (cross-correlation) using a naïve implementation that works
+        with the autograd engine. The expected tensor shapes are:
+          • input  : (N, C_in, H, W)
+          • weight : (C_out, C_in, K_h, K_w)
+          • bias   : (C_out,) or (1, C_out, 1, 1)  (optional)
+
+        Args:
+            weight (Tensor): convolution kernels/filters.
+            bias   (Tensor, optional): bias term.
+            stride (int): stride for both H and W dimensions.
+            padding (int): implicit zero-padding on both H and W dimensions.
+
+        Returns:
+            Tensor: Output of the convolution, shape (N, C_out, H_out, W_out)
+        """
+        # Ensure tensors
+        assert isinstance(weight, Tensor), "weight must be a Tensor"
+        if bias is not None and not isinstance(bias, Tensor):
+            bias = Tensor(bias, requires_grad=False)
+
+        N, C_in, H, W = self.data.shape
+        C_out, C_in_w, K_h, K_w = weight.data.shape
+        assert C_in == C_in_w, "Input channels mismatch between input and weight"
+
+        # Output dimensions
+        H_out = (H + 2 * padding - K_h) // stride + 1
+        W_out = (W + 2 * padding - K_w) // stride + 1
+
+        # Pad input if necessary (only spatial dims)
+        if padding > 0:
+            padded = np.pad(
+                self.data, ((0, 0), (0, 0), (padding, padding), (padding, padding)), mode="constant"
+            )
+        else:
+            padded = self.data
+        # Prepare output container
+        out_data = np.zeros((N, C_out, H_out, W_out), dtype=self.data.dtype)
+
+        # Forward pass (naïve loops – can be optimized later)
+        for n in range(N):
+            for c_out in range(C_out):
+                for i in range(H_out):
+                    for j in range(W_out):
+                        h_start = i * stride
+                        w_start = j * stride
+                        region = padded[n, :, h_start : h_start + K_h, w_start : w_start + K_w]
+                        out_data[n, c_out, i, j] = np.sum(region * weight.data[c_out])
+                        if bias is not None:
+                            # Bias broadcasting – works for (C_out,) or compatible shapes
+                            out_data[n, c_out, i, j] += bias.data.flatten()[c_out]
+
+        # Determine if gradients are required for the output
+        requires_grad = self.requires_grad or weight.requires_grad or (bias.requires_grad if bias is not None else False)
+        out = Tensor(out_data, requires_grad=requires_grad)
+        out._prev = [self, weight] + ([bias] if bias is not None else [])
+        out._op = "conv2d"
+
+        # Backward closure – captures the context of this forward pass
+        if requires_grad:
+            def _backward():
+                dout = out.grad  # (N, C_out, H_out, W_out)
+
+                # Gradient w.r.t. bias
+                if bias is not None and bias.requires_grad:
+                    # Sum over N, H_out, W_out for each output channel
+                    if bias.grad is None:
+                        bias.grad = np.zeros_like(bias.data)
+                    bias.grad += dout.sum(axis=(0, 2, 3)).reshape(bias.data.shape)
+
+                # Gradient w.r.t. weight
+                if weight.requires_grad:
+                    if weight.grad is None:
+                        weight.grad = np.zeros_like(weight.data)
+                    dw = np.zeros_like(weight.data)
+                    for n in range(N):
+                        for c_out in range(C_out):
+                            for i in range(H_out):
+                                for j in range(W_out):
+                                    h_start = i * stride
+                                    w_start = j * stride
+                                    region = padded[n, :, h_start : h_start + K_h, w_start : w_start + K_w]
+                                    dw[c_out] += region * dout[n, c_out, i, j]
+                    weight.grad += dw
+
+                # Gradient w.r.t. input
+                if self.requires_grad:
+                    if self.grad is None:
+                        self.grad = np.zeros_like(self.data)
+                    dx_padded = np.zeros_like(padded)
+                    for n in range(N):
+                        for c_out in range(C_out):
+                            for i in range(H_out):
+                                for j in range(W_out):
+                                    h_start = i * stride
+                                    w_start = j * stride
+                                    dx_padded[n, :, h_start : h_start + K_h, w_start : w_start + K_w] += (
+                                        weight.data[c_out] * dout[n, c_out, i, j]
+                                    )
+                    # Remove padding
+                    if padding > 0:
+                        self.grad += dx_padded[:, :, padding : padding + H, padding : padding + W]
+                    else:
+                        self.grad += dx_padded
+
+            out._backward = _backward
+
+        return out
+
 # --- VAE-specific helpers (to be used in model definitions/layers) 
 # --- implemented with operations of the Tensor class to keep track of the gradients
 

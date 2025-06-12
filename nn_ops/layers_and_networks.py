@@ -509,3 +509,90 @@ class VAE:
     def eval(self): 
         self.encoder.eval()
         self.decoder.eval()
+
+# -----------------------------
+# New Convolutional Building Blocks
+# -----------------------------
+
+class Conv2DLayer:
+    """A simple 2-D convolution layer using the custom autograd Tensor engine."""
+
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int | tuple[int, int],
+        stride: int = 1,
+        padding: int = 0,
+        activation: str | None = None,
+        init_method: str = "he",
+    ) -> None:
+        # Parse kernel size
+        if isinstance(kernel_size, int):
+            k_h = k_w = kernel_size
+        else:
+            k_h, k_w = kernel_size
+
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+        self.kernel_size = (k_h, k_w)
+        self.stride = stride
+        self.padding = padding
+        self.activation = activation
+        self.init_method = init_method
+
+        # Weight initialization: (out_channels, in_channels, k_h, k_w)
+        fan_in = in_channels * k_h * k_w
+        if init_method == "he":
+            std = np.sqrt(2.0 / fan_in)
+            W_np = np.random.normal(0, std, (out_channels, in_channels, k_h, k_w)).astype(np.float32)
+        elif init_method == "xavier":
+            limit = np.sqrt(6 / (fan_in + out_channels * k_h * k_w))
+            W_np = np.random.uniform(-limit, limit, (out_channels, in_channels, k_h, k_w)).astype(np.float32)
+        else:
+            W_np = np.random.uniform(-1, 1, (out_channels, in_channels, k_h, k_w)).astype(np.float32)
+
+        self.W = Tensor(W_np, requires_grad=True)
+        self.b = Tensor(np.zeros((out_channels,), dtype=np.float32), requires_grad=True)
+
+    def __call__(self, x: "Tensor") -> "Tensor":
+        z = x.conv2d(self.W, self.b, stride=self.stride, padding=self.padding)
+
+        # Apply activation if any
+        if self.activation == "relu":
+            z = z.relu()
+        elif self.activation == "sigmoid":
+            z = z.sigmoid()
+        elif self.activation == "softmax":
+            z = z.softmax()
+        # (None or unrecognised => linear)
+        return z
+
+    def parameters(self):
+        return [self.W, self.b]
+
+    def get_config(self):
+        return {
+            "layer_type": "Conv2D",
+            "in_channels": self.in_channels,
+            "out_channels": self.out_channels,
+            "kernel_size": self.kernel_size,
+            "stride": self.stride,
+            "padding": self.padding,
+            "activation": self.activation,
+            "init_method": self.init_method,
+        }
+
+
+class FlattenLayer:
+    """Flattens (N, *) tensors to (N, -1) for transition between conv->dense."""
+
+    def __call__(self, x: "Tensor") -> "Tensor":
+        batch_size = x.data.shape[0]
+        return x.reshape(batch_size, -1)
+
+    def parameters(self):
+        return []
+
+    def get_config(self):
+        return {"layer_type": "Flatten"}
