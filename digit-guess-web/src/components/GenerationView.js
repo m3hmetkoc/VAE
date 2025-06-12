@@ -10,6 +10,20 @@ const GenerationView = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  // Fashion-MNIST class labels
+  const fashionMNISTLabels = [
+    'T-shirt/top',
+    'Trouser', 
+    'Pullover',
+    'Dress',
+    'Coat',
+    'Sandal',
+    'Shirt',
+    'Sneaker',
+    'Bag',
+    'Ankle boot'
+  ];
+
   useEffect(() => {
     // Fetch models on component mount
     const fetchModels = async () => {
@@ -70,6 +84,14 @@ const GenerationView = () => {
   };
   
   const currentModel = models.find(m => m.path === selectedModel);
+  const isVAEModel = currentModel && currentModel.type === 'VAE';
+  const isCVAEModel = currentModel && currentModel.type === 'CVAE';
+  
+  // Check if the model is trained on Fashion-MNIST
+  const isFashionMNIST = currentModel && (
+    currentModel.name.toLowerCase().includes('fashion') ||
+    currentModel.path.toLowerCase().includes('fashion')
+  );
 
   return (
     <div className="generation-view">
@@ -95,20 +117,26 @@ const GenerationView = () => {
           </select>
         </div>
 
-        <div className="control-group">
+        <div className={`control-group ${isVAEModel ? 'has-tooltip' : ''}`}>
           <label htmlFor="label-select">Class Label:</label>
           <select 
             id="label-select"
             value={label}
             onChange={e => setLabel(e.target.value)}
-            disabled={isLoading || (currentModel && currentModel.type !== 'CVAE')}
+            disabled={isLoading || isVAEModel}
           >
-            {currentModel && currentModel.type !== 'CVAE' && <option value="any">Any (VAE)</option>}
+            {isVAEModel && <option value="any">Any (VAE)</option>}
             {Array.from({ length: 10 }, (_, i) => (
-              <option key={i} value={i}>{i}</option>
+              <option key={i} value={i}>
+                {isFashionMNIST && isCVAEModel ? fashionMNISTLabels[i] : i}
+              </option>
             ))}
           </select>
-           {currentModel && currentModel.type === 'VAE' && <p className="info-text">Label selection is only for CVAE models.</p>}
+          {isVAEModel && (
+            <div className="tooltip">
+              Cannot select label when VAE selected
+            </div>
+          )}
         </div>
 
         <div className="control-group">
@@ -131,11 +159,13 @@ const GenerationView = () => {
 
       {error && <div className="error-message">{error}</div>}
 
-      <div className="generated-images-grid">
-        {generatedImages.map((imgSrc, index) => (
-          <img key={index} src={imgSrc} alt={`Generated digit ${index}`} className="generated-image" />
-        ))}
-      </div>
+      {generatedImages.length > 0 && (
+        <div className="generated-images-grid">
+          {generatedImages.map((imgSrc, index) => (
+            <img key={index} src={imgSrc} alt={`Generated ${isFashionMNIST ? 'fashion item' : 'digit'} ${index}`} className="generated-image" />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

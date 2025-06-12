@@ -1,25 +1,40 @@
 .canvas-view {
-  padding: 20px;
+  padding: 25px 50px;
   background-color: #181818;
   height: 100vh;
   box-sizing: border-box;
+  margin-left: 20px;
+  width: calc(100% - 20px);
+  max-width: calc(100vw - 270px);
+  overflow-x: hidden;
+  overflow-y: hidden; /* Prevent vertical scrollbar */
 }
 
 .view-header {
-  margin-bottom: 15px;
+  margin-bottom: 18px;
 }
 
 .view-header h1 {
   color: #FFFFFF;
-  margin-bottom: 5px;
+  margin-bottom: 6px;
+  font-size: 2.2rem;
+  font-weight: 600;
 }
 
 .view-header p {
   color: #AAAAAA;
+  font-size: 1rem;
+  line-height: 1.3;
 }
 
 .main-container {
-  gap: 30px;
+  gap: 25px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-height: calc(100vh - 120px); /* Limit height to prevent overflow */
+  overflow-y: auto; /* Allow scrolling only within the container if needed */
 }
 
 .canvas-container {
@@ -183,10 +198,22 @@
 }
 
 /* Responsive design */
+@media (max-width: 1200px) {
+  .canvas-view {
+    padding: 20px 35px;
+    margin-left: 15px;
+  }
+  
+  .main-container {
+    max-height: calc(100vh - 110px);
+  }
+}
+
 @media (max-width: 1024px) {
   .main-container {
     flex-direction: column;
     align-items: center;
+    max-height: calc(100vh - 100px);
   }
   
   .prediction-section {
@@ -197,15 +224,17 @@
 
 @media (max-width: 768px) {
   .canvas-view {
-    padding: 15px;
+    padding: 15px 25px;
+    margin-left: 10px;
   }
   
   .view-header h1 {
-    font-size: 2rem;
+    font-size: 1.8rem;
   }
   
   .main-container {
     gap: 20px;
+    max-height: calc(100vh - 90px);
   }
   
   .controls {

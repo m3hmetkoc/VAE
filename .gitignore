@@ -10,3 +10,4 @@ venv/
 main/__pycache__
 digit-guess-web/node_modules/
 .DS_Store
+digit-guess-web/public/ank_uni_logo.png
