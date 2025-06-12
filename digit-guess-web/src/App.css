@@ -1,8 +1,8 @@
 .App {
   display: flex;
   min-height: 100vh;
-  background-color: #282c34;
-  color: white;
+  background-color: #181818;
+  color: #FFFFFF;
 }
 
 .main-content {
@@ -12,6 +12,7 @@
   align-items: center;
   overflow-y: auto;
   height: 100vh;
+  background-color: #181818;
 }
 
 .App-header {

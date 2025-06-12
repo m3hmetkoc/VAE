@@ -39,7 +39,6 @@ const CanvasView = () => {
   // Get mouse position relative to canvas
   const getMousePos = useCallback((e) => {
     const canvas = canvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
     const scaleX = CANVAS_WIDTH / rect.width;
     const scaleY = CANVAS_HEIGHT / rect.height;
@@ -109,9 +108,197 @@ const CanvasView = () => {
       // Use red channel (since we're only using black/white)
       grayscaleArray.push(data[i]);
     }
+    // Apply MNIST-style preprocessing
+
+    grayscaleArray = preprocessForMNIST(grayscaleArray);
     
     return grayscaleArray;
   };
+  // Preprocess canvas data to match MNIST format
+
+  const preprocessForMNIST = (pixelData) => {
+
+    // Convert to 2D array for easier processing
+
+    const image2D = [];
+
+    for (let i = 0; i < 28; i++) {
+
+      image2D.push(pixelData.slice(i * 28, (i + 1) * 28));
+
+    }
+
+    
+
+    // Find bounding box of the drawn content
+
+    let minX = 28, maxX = -1, minY = 28, maxY = -1;
+
+    for (let y = 0; y < 28; y++) {
+
+      for (let x = 0; x < 28; x++) {
+
+        if (image2D[y][x] > 0) {
+
+          minX = Math.min(minX, x);
+
+          maxX = Math.max(maxX, x);
+
+          minY = Math.min(minY, y);
+
+          maxY = Math.max(maxY, y);
+
+        }
+
+      }
+
+    }
+
+    
+
+    // If no drawing found, return original
+
+    if (maxX === -1) {
+
+      return pixelData;
+
+    }
+
+    
+
+    // Calculate center of mass for better centering (MNIST style)
+
+    let sumX = 0, sumY = 0, totalMass = 0;
+
+    for (let y = minY; y <= maxY; y++) {
+
+      for (let x = minX; x <= maxX; x++) {
+
+        const intensity = image2D[y][x];
+
+        sumX += x * intensity;
+
+        sumY += y * intensity;
+
+        totalMass += intensity;
+
+      }
+
+    }
+
+    
+
+    if (totalMass === 0) return pixelData;
+
+    
+
+    const centerX = sumX / totalMass;
+
+    const centerY = sumY / totalMass;
+
+    
+
+    // Create new centered image
+
+    const centered = Array(28 * 28).fill(0);
+
+    const targetCenterX = 13.5; // Center of 28x28 grid
+
+    const targetCenterY = 13.5;
+
+    
+
+    const offsetX = Math.round(targetCenterX - centerX);
+
+    const offsetY = Math.round(targetCenterY - centerY);
+
+    
+
+    for (let y = 0; y < 28; y++) {
+
+      for (let x = 0; x < 28; x++) {
+
+        const srcX = x - offsetX;
+
+        const srcY = y - offsetY;
+
+        
+
+        if (srcX >= 0 && srcX < 28 && srcY >= 0 && srcY < 28) {
+
+          centered[y * 28 + x] = image2D[srcY][srcX];
+
+        }
+
+      }
+
+    }
+
+    
+
+    // Apply slight gaussian blur to match MNIST smoothing
+
+    const blurred = applyGaussianBlur(centered);
+
+    
+
+    return blurred;
+
+  };
+
+
+
+  // Simple 3x3 Gaussian blur to match MNIST preprocessing
+
+  const applyGaussianBlur = (data) => {
+
+    const result = [...data];
+
+    const kernel = [
+
+      [1, 2, 1],
+
+      [2, 4, 2], 
+
+      [1, 2, 1]
+
+    ];
+
+    const kernelSum = 16;
+
+    
+
+    for (let y = 1; y < 27; y++) {
+
+      for (let x = 1; x < 27; x++) {
+
+        let sum = 0;
+
+        for (let ky = -1; ky <= 1; ky++) {
+
+          for (let kx = -1; kx <= 1; kx++) {
+
+            const idx = (y + ky) * 28 + (x + kx);
+
+            sum += data[idx] * kernel[ky + 1][kx + 1];
+
+          }
+
+        }
+
+        result[y * 28 + x] = Math.round(sum / kernelSum);
+
+      }
+
+    }
+
+    
+
+    return result;
+
+  };
+
+  
 
   // Check if canvas has any drawing
   const hasDrawing = () => {
@@ -225,17 +412,10 @@ const CanvasView = () => {
               <button onClick={clearCanvas} className="control-button">
                 Clear Canvas
               </button>
-              <button 
-                onClick={() => predictDigit(false)} 
-                className="control-button predict-button"
-                disabled={isLoading}
-              >
-                {isLoading ? 'Predicting...' : 'Predict Now'}
-              </button>
             </div>
             
             <div className="auto-prediction-info">
-              <p>✨ Auto-prediction enabled - predictions update automatically as you draw!</p>
+              <p>The AI will automatically predict your digit as you draw! Predictions appear 500ms after you stop drawing.</p>
             </div>
           </div>
 
@@ -283,12 +463,6 @@ const CanvasView = () => {
               </div>
             )}
           </div>
-        </div>
-        
-        <div className="info">
-          <p>Canvas Size: 28x28 pixels</p>
-          <p>Background: Black (0) • Drawing: White (255)</p>
-          <p>AI Model: Neural Network trained on MNIST dataset</p>
         </div>
     </div>
   );

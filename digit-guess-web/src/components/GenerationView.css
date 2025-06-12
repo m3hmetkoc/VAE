@@ -1,24 +1,25 @@
 .generation-view {
-  padding: 40px;
+  padding: 30px;
   width: 100%;
   overflow-y: auto;
+  background-color: #181818;
 }
 
 .view-header {
   margin-bottom: 30px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #444;
+  border-bottom: 1px solid #383838;
 }
 
 .view-header h1 {
   margin-bottom: 10px;
   font-size: 2.5rem;
-  color: white;
+  color: #FFFFFF;
 }
 
 .view-header p {
   font-size: 1.2rem;
-  color: #aaa;
+  color: #AAAAAA;
 }
 
 .generation-controls {
@@ -26,10 +27,11 @@
   flex-wrap: wrap;
   gap: 20px;
   align-items: flex-end;
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: #212121;
   padding: 20px;
   border-radius: 8px;
   margin-bottom: 30px;
+  border: 1px solid #383838;
 }
 
 .control-group {
@@ -40,7 +42,7 @@
 
 .control-group label {
   font-weight: bold;
-  color: #ccc;
+  color: #AAAAAA;
   font-size: 0.9rem;
 }
 
@@ -48,9 +50,9 @@
 .control-group input {
   padding: 10px;
   border-radius: 5px;
-  border: 1px solid #555;
-  background-color: #333;
-  color: white;
+  border: 1px solid #383838;
+  background-color: #181818;
+  color: #FFFFFF;
   min-width: 200px;
   font-size: 1rem;
 }
@@ -62,14 +64,16 @@
 }
 
 .info-text {
-    font-size: 0.8rem;
-    color: #888;
-    margin: 5px 0 0 0;
+  font-size: 0.8rem;
+  color: #AAAAAA;
+  height: 20px;
+  margin-top: 5px;
+  margin-bottom: 9px;
 }
 
 .generate-button {
-  background-color: #4CAF50;
-  color: white;
+  background-color: #3DA6FF;
+  color: #181818;
   border: none;
   padding: 12px 24px;
   font-size: 16px;
@@ -81,13 +85,14 @@
 }
 
 .generate-button:hover:not(:disabled) {
-  background-color: #45a049;
+  background-color: #1A94F3;
 }
 
 .generate-button:disabled {
-  background-color: #666;
+  background-color: #383838;
   cursor: not-allowed;
   opacity: 0.7;
+  color: #717171;
 }
 
 .generated-images-grid {
@@ -100,18 +105,18 @@
 .generated-image {
   width: 100%;
   height: auto;
-  border: 2px solid #555;
+  border: 1px solid #383838;
   border-radius: 8px;
-  background-color: #000;
+  background-color: #000000;
   image-rendering: pixelated; /* Keeps the pixel art sharp */
 }
 
 /* Re-using error message style from App.css, but with a local version for modularity */
 .generation-view .error-message {
-  background-color: rgba(244, 67, 54, 0.1);
-  border: 1px solid rgba(244, 67, 54, 0.3);
+  background-color: rgba(255, 70, 70, 0.1);
+  border: 1px solid rgba(255, 70, 70, 0.3);
   border-radius: 8px;
   padding: 15px;
   margin-top: 20px;
-  color: #f44336;
+  color: #FF4646;
 } 

@@ -96,7 +96,7 @@ const GenerationView = () => {
         </div>
 
         <div className="control-group">
-          <label htmlFor="label-select">Digit Label:</label>
+          <label htmlFor="label-select">Class Label:</label>
           <select 
             id="label-select"
             value={label}
@@ -108,7 +108,7 @@ const GenerationView = () => {
               <option key={i} value={i}>{i}</option>
             ))}
           </select>
-           {currentModel && currentModel.type !== 'CVAE' && <p className="info-text">Label selection is only for CVAE models.</p>}
+           {currentModel && currentModel.type === 'VAE' && <p className="info-text">Label selection is only for CVAE models.</p>}
         </div>
 
         <div className="control-group">

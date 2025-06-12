@@ -1,91 +1,48 @@
 .canvas-view {
-  padding: 40px;
-  width: 100%;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  padding: 20px;
+  background-color: #181818;
+  height: 100vh;
+  box-sizing: border-box;
 }
 
 .view-header {
-  text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 15px;
 }
 
 .view-header h1 {
-  margin-bottom: 10px;
-  font-size: 2.5rem;
+  color: #FFFFFF;
+  margin-bottom: 5px;
 }
 
 .view-header p {
-  margin-bottom: 20px;
-  font-size: 1.2rem;
-  color: #aaa;
+  color: #AAAAAA;
 }
 
 .main-container {
-  display: flex;
-  gap: 40px;
-  align-items: flex-start;
-  justify-content: center;
-  flex-wrap: wrap;
-}
-
-.canvas-section {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  gap: 30px;
 }
 
 .canvas-container {
-  margin-bottom: 20px;
-  display: inline-block;
-  background-color: #000;
-  border: 2px solid #ccc;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.controls {
-  margin-bottom: 20px;
-  display: flex;
-  gap: 15px;
-  justify-content: center;
+  border: 1px solid #383838;
 }
 
 .auto-prediction-info {
-  margin-top: 15px;
-  padding: 10px;
-  background-color: rgba(76, 175, 80, 0.1);
-  border: 1px solid rgba(76, 175, 80, 0.3);
-  border-radius: 6px;
-  max-width: 400px;
+  background-color: transparent;
+  border: none;
 }
 
 .auto-prediction-info p {
-  margin: 0;
-  font-size: 0.9rem;
-  color: #4CAF50;
-  text-align: center;
+  color: #AAAAAA;
+  font-style: italic;
 }
 
 .control-button {
-  background-color: #61dafb;
-  color: #282c34;
-  border: none;
-  padding: 12px 24px;
-  font-size: 16px;
-  font-weight: bold;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 120px;
+  background-color: #383838;
+  color: #FFFFFF;
 }
 
 .control-button:hover:not(:disabled) {
-  background-color: #21a9c7;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  background-color: #4d4d4d;
 }
 
 .control-button:active {
@@ -99,11 +56,11 @@
 }
 
 .predict-button {
-  background-color: #4CAF50;
+  background-color: #28A745;
 }
 
 .predict-button:hover:not(:disabled) {
-  background-color: #45a049;
+  background-color: #218838;
 }
 
 .prediction-section {
@@ -113,40 +70,29 @@
 }
 
 .error-message {
-  background-color: rgba(244, 67, 54, 0.1);
-  border: 1px solid rgba(244, 67, 54, 0.3);
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
+  background-color: rgba(255, 70, 70, 0.1);
+  border: 1px solid rgba(255, 70, 70, 0.3);
 }
 
 .error-message h3 {
-  color: #f44336;
-  margin-top: 0;
+  color: #FF4646;
 }
 
 .error-message p {
-  color: #ccc;
-  margin: 10px 0;
+  color: #AAAAAA;
 }
 
 .error-hint {
-  font-family: 'Courier New', monospace;
-  font-size: 0.9rem;
-  background-color: rgba(0, 0, 0, 0.3);
-  padding: 10px;
-  border-radius: 4px;
+  background-color: #212121;
 }
 
 .error-hint code {
-  color: #61dafb;
+  color: #FF4646;
 }
 
 .prediction-results {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 20px;
+  background-color: #212121;
+  border: 1px solid #383838;
 }
 
 .prediction-header {
@@ -155,7 +101,7 @@
 
 .prediction-header h3 {
   margin: 0 0 15px 0;
-  color: #61dafb;
+  color: #3DA6FF;
 }
 
 .main-prediction {
@@ -166,26 +112,18 @@
 }
 
 .predicted-digit {
-  font-size: 3rem;
-  font-weight: bold;
-  color: #4CAF50;
-  background-color: rgba(76, 175, 80, 0.1);
-  border: 2px solid #4CAF50;
-  border-radius: 8px;
-  padding: 10px 20px;
-  min-width: 60px;
-  text-align: center;
+  color: #3DA6FF;
+  background-color: rgba(61, 166, 255, 0.1);
+  border: 1px solid rgba(61, 166, 255, 0.3);
 }
 
 .confidence {
-  font-size: 1.2rem;
-  color: #ccc;
+  color: #AAAAAA;
 }
 
 .probability-chart h4 {
   margin: 20px 0 15px 0;
-  color: #aaa;
-  font-size: 1.1rem;
+  color: #AAAAAA;
 }
 
 .probability-bar {
@@ -196,72 +134,52 @@
 }
 
 .digit-label {
-  font-weight: bold;
-  min-width: 20px;
-  text-align: center;
-  color: #ccc;
+  color: #AAAAAA;
 }
 
 .bar-container {
-  flex: 1;
-  height: 20px;
-  background-color: rgba(255, 255, 255, 0.1);
-  border-radius: 10px;
-  overflow: hidden;
+  background-color: #383838;
 }
 
 .bar {
-  height: 100%;
-  background-color: #61dafb;
-  border-radius: 10px;
-  transition: width 0.3s ease;
-  min-width: 2px;
+  background-color: #5a5a5a;
 }
 
 .bar-max {
-  background-color: #4CAF50;
-  box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+  background-color: #3DA6FF;
 }
 
 .probability-value {
-  min-width: 50px;
-  text-align: right;
-  font-size: 0.9rem;
-  color: #aaa;
+  color: #AAAAAA;
 }
 
 .placeholder {
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 2px dashed rgba(255, 255, 255, 0.2);
-  border-radius: 8px;
-  padding: 40px 20px;
-  text-align: center;
+  background-color: #212121;
+  border: 1px dashed #383838;
 }
 
 .placeholder h3 {
-  color: #aaa;
-  margin-bottom: 15px;
+  color: #AAAAAA;
 }
 
 .placeholder p {
-  color: #666;
-  font-size: 0.9rem;
-  line-height: 1.4;
+  color: #717171;
 }
 
 .info {
-  margin-top: 40px;
+  margin-top: 20px;
   padding: 20px;
-  background-color: rgba(255, 255, 255, 0.1);
+  background-color: #FFFFFF;
+  border: 1px solid #DEE2E6;
   border-radius: 8px;
-  max-width: 800px;
+  max-width: 90%;
   text-align: center;
 }
 
 .info p {
   margin: 8px 0;
   font-size: 0.9rem;
-  color: #ccc;
+  color: #6C757D;
 }
 
 /* Responsive design */
