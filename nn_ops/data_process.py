@@ -85,7 +85,7 @@ def load_dataset(dataset_name='mnist', batch_size=64, data_path='../data_and_mod
     )
     return train_loader, test_loader
 
-def load_random_test_samples(dataset_name='mnist', num_samples=16, data_path='./data'):
+def load_random_test_samples(dataset_name='mnist', num_samples=16, data_path='../data_and_models/data'):
     """
     Load a random subset of test samples from the specified dataset.
     

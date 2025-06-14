@@ -130,15 +130,17 @@ def interpolate_in_latent_space(vae_model, latent_dim, num_steps=10, save_path=N
         generated_img = vae_model.decoder(z_tensor)
         interpolated_images.append(generated_img.data[0])
     
-    fig, axes = plt.subplots(1, num_steps, figsize=(num_steps * 1.5, 2))
-    if num_steps == 1:
-        axes = [axes]
+    num_rows = 4
+    num_cols = int(np.ceil(num_steps / num_rows))
+    fig, axes = plt.subplots(num_rows, num_cols, figsize=(num_cols * 1.5, num_rows * 1.5))
+    axes = axes.flatten()
     
-    for i, img_data in enumerate(interpolated_images):
-        img = img_data.reshape(28, 28)
-        img = np.clip(img, 0, 1)
-        axes[i].imshow(img, cmap='gray', vmin=0, vmax=1)
-        axes[i].set_title(f'α={alphas[i]:.2f}', fontsize=8)
+    for i in range(num_rows * num_cols):
+        if i < len(interpolated_images):
+            img = interpolated_images[i].reshape(28, 28)
+            img = np.clip(img, 0, 1)
+            axes[i].imshow(img, cmap='gray', vmin=0, vmax=1)
+            axes[i].set_title(f'α={alphas[i]:.2f}', fontsize=8)
         axes[i].axis('off')
     
     plt.suptitle('Latent Space Interpolation', fontsize=14)

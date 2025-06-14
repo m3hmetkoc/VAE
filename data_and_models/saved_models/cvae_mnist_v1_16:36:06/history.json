@@ -1,0 +1,8 @@
+{
+    "epochs": 15,
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "training_time": 162.03550601005554,
+    "dataset": "mnist",
+    "model_type": "CVAE"
+}

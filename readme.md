@@ -1,253 +1,175 @@
-# Neural Network Training and VAE Digit Generation
+# A Deep Learning Framework for VAEs with an Interactive Web UI
 
-A comprehensive framework for training various neural network architectures (VAE, NN, VAE_old) and generating MNIST digits using trained Variational Autoencoders (VAEs).
+This project is a comprehensive deep learning framework built entirely from scratch in Python using NumPy. It focuses on generative modeling with Variational Autoencoders (VAEs) and Conditional VAEs (CVAEs), and features a custom-built computational engine that handles automatic differentiation and backpropagation.
 
-## 🚀 Features
+To make the models accessible and fun to use, the project includes a full-stack web application with a React frontend and a Flask backend. This UI allows users to draw digits and see a trained classifier predict them in real-time, as well as generate novel images of digits and clothing using the trained VAEs and CVAEs.
 
-- **Universal Training Pipeline**: Train VAE, NN, and VAE_old models with a single script
-- **Flexible Architecture Configuration**: Define custom model architectures via JSON files
-- **VAE Digit Generation**: Generate new MNIST-style digits using trained VAE models
-- **Latent Space Exploration**: Interpolate between points in latent space
-- **Model Management**: Save, load, and list trained models with metadata
-- **Command-Line Interface**: Easy-to-use CLI for all operations
+This project was developed as a senior computer engineering project to gain a deep, foundational understanding of how neural networks and generative models work.
+
+## ✨ Key Features
+
+-   **Custom Autograd Engine:** A NumPy-based `Tensor` class that dynamically builds a computational graph and performs backpropagation.
+-   **From-Scratch Models:** Implementation of VAE, CVAE, and MLP classifiers.
+-   **Interactive Web Application:** A React + Flask web app for interacting with the models.
+-   **Real-time Digit Recognition:** Draw a digit on an HTML canvas and have a trained model predict it.
+-   **Conditional Image Generation:** Select a trained model (VAE or CVAE) and generate new images of MNIST digits or Fashion-MNIST clothing items.
+-   **Flexible Configuration:** Define model architectures using JSON files for easy experimentation.
 
 ## 📁 Project Structure
 
 ```
-project/
-├── main.py                 # Universal model training script
-├── generate_digits.py      # VAE digit generation script
-├── model_configs.json      # Example model configurations
-├── save_load_model.py      # Model saving/loading utilities
-├── nn_ops/                 # Neural network operations module
-│   ├── __init__.py
-│   ├── layers_and_networks.py
-│   ├── data_process.py
-│   └── train_ops.py
-└── saved_models/           # Directory for saved models (auto-created)
+.
+├── data_and_models/    # Directory for datasets and saved models
+├── digit-guess-web/    # React.js frontend application
+├── images_report/      # Supporting images for the project report
+├── main/               # Main Python scripts (Flask server, training, generation)
+├── nn_ops/             # The core "from-scratch" deep learning engine
+├── readme.md
+└── requirements.txt
 ```
 
-## 🛠️ Installation
+## 🚀 Getting Started
 
-1. **Clone the repository**:
-```bash
-git clone <repository-url>
-cd neural-network-training
-```
+To run the web application, you need to start both the Flask backend server and the React frontend client.
 
-2. **Install dependencies**:
-```bash
-pip install numpy matplotlib torch torchvision
-```
+### Prerequisites
 
-3. **Ensure your `nn_ops` module is properly set up** with all required components:
-   - `VAE`, `NN`, `VAE_old` classes
-   - `MNISTBatchGenerator`, `Train`, `ModelSaver`
-   - `load_mnist_data` function
+-   Python 3.8+
+-   Node.js and npm
 
-## 🎯 Quick Start
+### 1. Backend Setup
 
-### Training Your First VAE
+First, set up and run the Flask server which provides the API for the frontend.
 
 ```bash
-# Train a default VAE with 50 epochs
-python main.py --model-type VAE --epochs 50 --batch-size 64
+# 1. Navigate to the project root directory
+cd /path/to/your/project
 
-# Train with custom parameters
-python main.py --model-type VAE --epochs 100 --learning-rate 0.001 --model-name my_vae
+# 2. Create and activate a virtual environment (recommended)
+python -m venv venv
+source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+
+# 3. Install Python dependencies
+pip install -r requirements.txt
+
+# 4. Start the Flask server
+#    You must provide a path to a trained classifier model.
+#    A pre-trained model might be in `data_and_models/saved_models/`
+python main/prediction_server.py --model-path "path/to/your/classifier_model"
 ```
 
-### Generating Digits
+The backend server will now be running on `http://127.0.0.1:5000`.
+
+### 2. Frontend Setup
+
+In a **new terminal**, set up and run the React application.
 
 ```bash
-# First, list your trained models
-python generate_digits.py --list-models
+# 1. Navigate to the frontend directory
+cd /path/to/your/project/digit-guess-web
 
-# Generate 25 digits using a trained VAE
-python generate_digits.py --model-path "saved_models/my_vae_12:34:56" --num-samples 25
+# 2. Install Node.js dependencies
+npm install
+
+# 3. Start the React development server
+npm start
 ```
 
-## 📚 Detailed Usage Guide
+The web application will automatically open in your browser at `http://localhost:3000`. You can now interact with the digit predictor and image generation features.
 
-### 1. Training Models
+## Advanced Usage: Command-Line Tools
 
-The `main.py` script supports multiple ways to train models:
+For users who want to bypass the web interface, the project includes command-line scripts for training, generation, and evaluation. These scripts are located in the `main/` directory.
 
-#### Command Line Arguments
+### Training Models (`main/main.py`)
 
-```bash
-python main.py [OPTIONS]
+The `main.py` script is the entry point for training VAE, CVAE, and standard Neural Network (NN) classifiers.
+
+**Key Arguments:**
+
+*   `--model-type`: Specify the model architecture. Choices: `VAE`, `NN`.
+*   `--cvae`: If specified with `--model-type VAE`, a Conditional VAE will be trained.
+*   `--dataset`: Choose the dataset for training. Choices: `mnist`, `fashion_mnist`.
+*   `--epochs`: Number of training epochs.
+*   `--batch-size`: Training batch size.
+*   `--learning-rate`: Learning rate for the optimizer.
+*   `--model-name`: A custom name for the saved model directory.
+
+**Training Examples:**
+
+*   **Train a standard VAE on MNIST:**
+    ```bash
+    python main/main.py --model-type VAE --dataset mnist --epochs 50 --model-name MyVAE_MNIST
+    ```
+
+*   **Train a Conditional VAE (CVAE) on Fashion-MNIST:**
+    ```bash
+    python main/main.py --model-type VAE --cvae --dataset fashion_mnist --epochs 100 --model-name MyCVAE_Fashion
+    ```
+
+*   **Train a Neural Network Classifier on MNIST:**
+    ```bash
+    python main/main.py --model-type NN --dataset mnist --epochs 30 --model-name MyNN_Classifier
+    ```
+
+### Generating Images (`main/generate_images.py`)
+
+This script uses a trained VAE or CVAE to generate new images.
+
+**Key Arguments:**
+
+*   `--model-path`: **(Required)** Path to the saved model directory (e.g., `models/MyCVAE_Fashion_...`).
+*   `--num-samples`: Number of images to generate.
+*   `--label`: **(CVAE Only)** Generate images of a specific class (e.g., `--label 7`).
+*   `--interpolate`: **(VAE Only)** Generate a smooth transition between two random points in the latent space.
+*   `--save-images`: Optional path to save the output image (e.g., `generated_images.png`).
+
+**Generation Examples:**
+
+*   **Generate random images with a VAE:**
+    ```bash
+    python main/generate_images.py --model-path models/MyVAE_MNIST_... --num-samples 16
+    ```
+
+*   **Generate specific digits (e.g., '8') with a CVAE:**
+    ```bash
+    python main/generate_images.py --model-path models/MyCVAE_Fashion_... --label 8 --num-samples 10
+    ```
+
+*   **Create a latent space interpolation with a VAE:**
+    ```bash
+    python main/generate_images.py --model-path models/MyVAE_MNIST_... --interpolate --interp-steps 12
+    ```
+
+### Predicting Digits (`main/predict_digits.py`)
+
+This script is used to evaluate the performance of a trained **NN classifier** on the test set. For interactive single-digit prediction, please use the web application.
+
+**Key Arguments:**
+
+*   `--model-path`: **(Required)** Path to the saved NN classifier model directory (e.g., `models/MyNN_Classifier_...`).
+*   `--num-samples`: Number of random test images to evaluate.
+*   `--save-images`: Optional path to save the results visualization.
+
+**Prediction Example:**
+
+*   **Test an NN classifier on 20 random samples from its dataset:**
+    ```bash
+    python main/predict_digits.py --model-path models/MyNN_Classifier_... --num-samples 20
+    ```
+
+This will display and plot the predictions versus the true labels and print the overall accuracy.
+
+## Project Structure
+
 ```
-
-**Available Options:**
-- `--config PATH`: Path to JSON configuration file
-- `--model-type {VAE,NN,VAE_old}`: Model type (default: VAE)
-- `--epochs INT`: Number of training epochs (default: 50)
-- `--batch-size INT`: Training batch size (default: 64)  
-- `--learning-rate FLOAT`: Learning rate (default: 0.001)
-- `--model-name STR`: Custom name for saved model
-- `--list-models`: List all saved models
-
-#### Training Examples
-
-**Basic VAE Training:**
-```bash
-python main.py --model-type VAE --epochs 50 --batch-size 64
+.
+├── data_and_models/    # Directory for datasets and saved models
+├── digit-guess-web/    # React.js frontend application
+├── images_report/      # Supporting images for the project report
+├── main/               # Main Python scripts (Flask server, training, generation)
+├── nn_ops/             # The core "from-scratch" deep learning engine
+├── final_project_report.md
+├── readme.md
+└── requirements.txt
 ```
-
-**Advanced VAE with Custom Parameters:**
-```bash
-python main.py --model-type VAE --epochs 100 --batch-size 128 --learning-rate 0.0005 --model-name advanced_vae
-```
-
-**Neural Network Classifier:**
-```bash
-python main.py --model-type NN --epochs 30 --learning-rate 0.01 --model-name mnist_classifier
-```
-
-**Using Configuration Files:**
-```bash
-python main.py --config model_configs.json --epochs 75 --model-name deep_vae
-```
-
-### 2. Model Configuration Files
-
-Create custom architectures using JSON configuration files:
-
-#### VAE Configuration Example:
-```json
-{
-  "model_type": "VAE",
-  "input_dim": 784,
-  "latent_dim": 32,
-  "encoder_hidden_dims": [512, 256, 128],
-  "decoder_hidden_dims": [128, 256, 512],
-  "encoder_activations": ["relu", "relu", "relu"],
-  "decoder_activations": ["relu", "relu", "sigmoid"],
-  "encoder_dropout_rates": [0.2, 0.3, 0.2],
-  "decoder_dropout_rates": [0.2, 0.3, 0.0],
-  "init_method": "he"
-}
-```
-
-#### NN Configuration Example:
-```json
-{
-  "model_type": "NN",
-  "nin": 784,
-  "nouts": [256, 128, 64, 10],
-  "activations": ["relu", "relu", "relu", "softmax"],
-  "dropout_rates": [0.2, 0.3, 0.4, 0.0],
-  "init_method": "he"
-}
-```
-
-### 3. Generating Digits with VAE
-
-The `generate_digits.py` script provides multiple generation modes:
-
-#### Command Line Arguments
-
-```bash
-python generate_digits.py [OPTIONS]
-```
-
-**Available Options:**
-- `--model-path PATH`: Path to saved VAE model (required)
-- `--num-samples INT`: Number of digits to generate (default: 25)
-- `--save-images PATH`: Save generated images to file
-- `--interpolate`: Generate latent space interpolation
-- `--interp-steps INT`: Number of interpolation steps (default: 10)
-- `--single`: Generate single digit with random latent vector
-- `--list-models`: List all saved models
-
-#### Generation Examples
-
-**Basic Digit Generation:**
-```bash
-python generate_digits.py --model-path "saved_models/vae_trained_12:34:56" --num-samples 25
-```
-
-**Generate and Save Images:**
-```bash
-python generate_digits.py --model-path "saved_models/vae_trained_12:34:56" --num-samples 100 --save-images my_digits.png
-```
-
-**Latent Space Interpolation:**
-```bash
-python generate_digits.py --model-path "saved_models/vae_trained_12:34:56" --interpolate --interp-steps 15
-```
-
-**Single Digit Generation:**
-```bash
-python generate_digits.py --model-path "saved_models/vae_trained_12:34:56" --single
-```
-
-## 📊 Model Management
-
-### Listing Saved Models:
-```bash
-python main.py --list-models
-# or
-python generate_digits.py --list-models
-```
-
-### Model Directory Structure:
-```
-saved_models/
-└── vae_trained_12:34:56/
-    ├── architecture.json    # Model configuration
-    ├── weights.pkl         # Model parameters
-    └── history.json        # Training metadata
-```
-
-### Loading Models Programmatically:
-```python
-from nn_ops import ModelSaver
-
-# Load a saved model
-model, history = ModelSaver.load_model("saved_models/vae_trained_12:34:56")
-print(f"Model trained for {history['epochs']} epochs")
-```
-
-## 🎨 Generation Examples
-
-### Batch Generation Workflow:
-```bash
-# 1. Train a VAE
-python main.py --model-type VAE --epochs 100 --model-name production_vae
-
-# 2. List models to get the exact path
-python generate_digits.py --list-models
-
-# 3. Generate digits
-python generate_digits.py --model-path "saved_models/production_vae_XX:XX:XX" --num-samples 50 --save-images results.png
-
-# 4. Explore latent space
-python generate_digits.py --model-path "saved_models/production_vae_XX:XX:XX" --interpolate --interp-steps 20
-```
-
-## 🐛 Troubleshooting
-
-### Common Issues:
-
-1. **"Model type not supported" error**:
-   - Make sure your model is a VAE when using `generate_digits.py`
-   - Check that `model_type` in configuration is correct
-
-2. **"Model path does not exist"**:
-   - Use `--list-models` to see available models
-   - Copy the exact path from the list
-
-3. **Memory issues**:
-   - Reduce batch size (`--batch-size 32`)
-   - Reduce model size in configuration
-
-For issues and questions:
-mail: kocmehmet3366@gmail.com
-
-Mehmet Koç 
-
----
-
-**Happy Training and Generating! 🎨✨**
