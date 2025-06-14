@@ -1,6 +1,5 @@
 data_and_models/data 
 data_and_models/generated_imgs_on_training
-data_and_models/saved_models 
 __pycache__/
 nn_ops/__pycache__
 .venv/
@@ -11,3 +10,6 @@ main/__pycache__
 digit-guess-web/node_modules/
 .DS_Store
 digit-guess-web/public/ank_uni_logo.png
+images_report/
+final_project_report.md 
+report.tex 

@@ -49,7 +49,7 @@ class ModelSaver:
             model_name_to_use = f'model_{timestamp}'
 
         # Create unique directory with timestamp to avoid conflicts
-        timestamp_suffix = datetime.datetime.now().strftime('%H:%M:%S')
+        timestamp_suffix = datetime.datetime.now().strftime('%H%M%S')
         model_dir = os.path.join(self.base_path, f"{model_name_to_use}_{timestamp_suffix}")
         os.makedirs(model_dir, exist_ok=True)
     

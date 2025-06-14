@@ -1,0 +1,8 @@
+{
+    "epochs": 15,
+    "batch_size": 128,
+    "learning_rate": 0.001,
+    "training_time": 161.92920517921448,
+    "dataset": "fashion_mnist",
+    "model_type": "VAE"
+}
